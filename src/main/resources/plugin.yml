@@ -1,0 +1,4 @@
+name: nimoh
+version: '1.0-SNAPSHOT'
+main: io.main.nimoh.Nimoh
+api-version: '1.21.5'
