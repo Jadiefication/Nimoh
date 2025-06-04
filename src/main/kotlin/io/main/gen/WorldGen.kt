@@ -4,6 +4,7 @@ import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
 import org.spongepowered.noise.module.source.Perlin
+import org.spongepowered.noise.module.source.Simplex
 import java.util.*
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -12,15 +13,15 @@ import kotlin.math.sqrt
 class WorldGen: ChunkGenerator() {
 
     private val baseSea = 62
-    private val terrainAmplitude = 120
+    private val terrainAmplitude = 40
     private val scale = 0.005
-    private val noise = Perlin().apply {
-        setSeed(500)
-    }
-    private val landRadius = 1000
-    private val falloffRadius = 1200
+    private val noise = Simplex()
+    private val landRadius = 400
+    private val falloffRadius = 600
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
+        random.setSeed(worldInfo.seed)
+        noise.setSeed(random.nextInt())
         for (x in 0..16) {
             for (z in 0..16) {
                 val worldX = chunkX * 16 + x
@@ -67,9 +68,13 @@ class WorldGen: ChunkGenerator() {
             }
         }
 
-        // Place water if below sea level
-        for (y in (height + 1)..baseSea) {
-            chunk.setBlock(x, y, z, Material.WATER)
+        if (height == baseSea) {
+            for (y in 0..height) {
+                if (y == 0) {
+                    chunk.setBlock(x, y, z, Material.BEDROCK)
+                }
+                chunk.setBlock(x, y, z, Material.WATER)
+            }
         }
     }
 }
