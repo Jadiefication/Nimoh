@@ -14,21 +14,28 @@ class WorldGen: ChunkGenerator() {
 
     private val baseSea = 62
     private val terrainAmplitude = 40
-    private val scale = 0.005
-    private val noise = Simplex()
+    private val sScale = 0.005
+    private val pScale = 0.0001
+    private val sNoise = Simplex()
+    private val pNoise = Perlin()
     private val landRadius = 400
     private val falloffRadius = 600
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
         random.setSeed(worldInfo.seed)
-        noise.setSeed(random.nextInt())
+        val seed = random.nextInt()
+        sNoise.setSeed(seed)
+        pNoise.setSeed(seed)
         for (x in 0..16) {
             for (z in 0..16) {
                 val worldX = chunkX * 16 + x
                 val worldZ = chunkZ * 16 + z
 
-                val noise = noise.get(worldX.toDouble() * scale, 0.0, worldZ.toDouble() * scale)
-                val height = (baseSea + ((noise + 1.0) / 2) * terrainAmplitude).toInt()
+                val simplexNoise = sNoise.get(worldX.toDouble() * sScale, 0.0, worldZ.toDouble() * sScale)
+                val perlinNoise = pNoise.get(worldX.toDouble() * pScale, 0.0, worldZ.toDouble() * pScale)
+                val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
+                val pHeight = ((baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude)).pow(2).toInt()
+                val height = sHeight * pHeight
                 val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ)).toInt()
 
                 setBlocks(finalHeight, chunk, x, z)
