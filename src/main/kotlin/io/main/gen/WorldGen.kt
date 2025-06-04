@@ -34,8 +34,8 @@ class WorldGen: ChunkGenerator() {
                 val simplexNoise = sNoise.get(worldX.toDouble() * sScale, 0.0, worldZ.toDouble() * sScale)
                 val perlinNoise = pNoise.get(worldX.toDouble() * pScale, 0.0, worldZ.toDouble() * pScale)
                 val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                val pHeight = ((baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude)).pow(2).toInt()
-                val height = sHeight * pHeight
+                val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
+                val height = sHeight * 0.7 + pHeight * 0.3
                 val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ)).toInt()
 
                 setBlocks(finalHeight, chunk, x, z)
