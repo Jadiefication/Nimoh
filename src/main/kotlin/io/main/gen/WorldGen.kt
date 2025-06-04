@@ -5,6 +5,8 @@ import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
 import org.spongepowered.noise.module.source.Perlin
 import java.util.*
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 class WorldGen: ChunkGenerator() {
@@ -15,6 +17,8 @@ class WorldGen: ChunkGenerator() {
     private val noise = Perlin().apply {
         setSeed(500)
     }
+    private val landRadius = 1000
+    private val falloffRadius = 1200
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
         for (x in 0..16) {
@@ -24,9 +28,28 @@ class WorldGen: ChunkGenerator() {
 
                 val noise = noise.get(worldX.toDouble() * scale, 0.0, worldZ.toDouble() * scale)
                 val height = (baseSea + ((noise + 1.0) / 2) * terrainAmplitude).toInt()
-                setBlocks(height, chunk, x, z)
+                val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ)).toInt()
+
+                setBlocks(finalHeight, chunk, x, z)
             }
         }
+    }
+
+    private fun handleFalloff(x: Int, z: Int): Double {
+        val distance = sqrt(x.toDouble().pow(2) + z.toDouble().pow(2))
+
+        var falloffValue: Double
+        if (distance <= landRadius) {
+            falloffValue = 1.0
+        } else if (distance >= falloffRadius) {
+            falloffValue = 0.0
+        } else {
+            val range = falloffRadius - landRadius
+            var progress = (distance - landRadius) / range
+            progress = progress * progress * (3 - 2 * progress)
+            falloffValue = 1.0 - progress
+        }
+        return falloffValue
     }
 
     private fun setBlocks(height: Int, chunk: ChunkData, x: Int, z: Int) {
