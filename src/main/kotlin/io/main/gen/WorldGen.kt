@@ -3,6 +3,7 @@ package io.main.gen
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
+import org.joml.Vector3L
 import org.spongepowered.noise.module.source.Perlin
 import org.spongepowered.noise.module.source.Simplex
 import java.util.*
@@ -20,6 +21,7 @@ class WorldGen: ChunkGenerator() {
     private val pNoise = Perlin()
     private val landRadius = 400
     private val falloffRadius = 600
+    private var distance: Double = 0.0
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
         random.setSeed(worldInfo.seed)
@@ -44,7 +46,7 @@ class WorldGen: ChunkGenerator() {
     }
 
     private fun handleFalloff(x: Int, z: Int): Double {
-        val distance = sqrt(x.toDouble().pow(2) + z.toDouble().pow(2))
+        distance = sqrt(x.toDouble().pow(2) + z.toDouble().pow(2))
 
         var falloffValue: Double
         if (distance <= landRadius) {
@@ -71,7 +73,7 @@ class WorldGen: ChunkGenerator() {
             } else if (y < height) {
                 chunk.setBlock(x, y, z, Material.DIRT) // Top layers dirt
             } else { // y == height
-                chunk.setBlock(x, y, z, Material.GRASS_BLOCK) // Topmost layer grass
+                handleShore(y, chunk, x, z)
             }
         }
 
@@ -82,6 +84,35 @@ class WorldGen: ChunkGenerator() {
                 }
                 chunk.setBlock(x, y, z, Material.WATER)
             }
+        }
+    }
+
+    private fun handleShore(y: Int, chunk: ChunkData, x: Int, z: Int) {
+        if (63 <= y && y <= 65) {
+            val range = falloffRadius - landRadius
+            var progress = (distance - landRadius) / range
+            progress = progress * progress * (3 - 2 * progress)
+            if (progress >= 0.9) {
+                chance(chunk, x, y, z)
+            }
+        } else {
+            if (66 <= y && y <= 68) {
+                if (Random().nextInt() % 5 == 0) {
+                    chance(chunk, x, y, z)
+                } else {
+                    chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
+                }
+            } else {
+                chunk.setBlock(x, y, z, Material.GRASS_BLOCK) // Topmost layer grass
+            }
+        }
+    }
+
+    private fun chance(chunk: ChunkData, x: Int, y: Int, z: Int) {
+        if (Random().nextInt() % 2 == 0) {
+            chunk.setBlock(x, y, z, Material.SAND)
+        } else {
+            chunk.setBlock(x, y, z, Material.GRAVEL)
         }
     }
 }
