@@ -17,7 +17,7 @@ class WorldGen: ChunkGenerator() {
     private val terrainAmplitude = 40
     private val sScale = 0.005
     private val pScale = 0.0001
-    private val iScale = 0.000001
+    private val iScale = 0.0001
     private val sNoise = Simplex()
     private val pNoise = Perlin()
     private val iNoise = Perlin()
@@ -39,15 +39,22 @@ class WorldGen: ChunkGenerator() {
                 val islandNoise = iNoise.get(worldX * iScale, 0.0, worldZ * iScale)
                 val iNoiseValue = (islandNoise + 1.0) / 2
 
-                val finalHeight = if (iNoiseValue >= 0.6) {
-                    val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
-                    val perlinNoise = pNoise.get(worldX * pScale, 0.0, worldZ * pScale)
-                    val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                    val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                    val height = sHeight * 0.7 + pHeight * 0.3
-                    baseSea + ((height - baseSea) * iNoiseValue).toInt()
-                } else {
-                    baseSea
+                val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
+                val perlinNoise = pNoise.get(worldX * pScale, 0.0, worldZ * pScale)
+                val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
+                val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
+                val height = sHeight * 0.7 + pHeight * 0.3
+
+                val finalHeight = when (iNoiseValue) {
+                    0.0 -> {
+                        baseSea
+                    }
+                    1.0 -> {
+                        height.toInt()
+                    }
+                    else -> {
+                        baseSea + ((height - baseSea) * iNoiseValue).toInt()
+                    }
                 }
 
                 /*val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
