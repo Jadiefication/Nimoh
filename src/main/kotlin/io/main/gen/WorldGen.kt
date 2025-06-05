@@ -89,14 +89,7 @@ class WorldGen: ChunkGenerator() {
 
     private fun handleShore(y: Int, chunk: ChunkData, x: Int, z: Int) {
         if (63 <= y && y <= 65) {
-            val range = falloffRadius - landRadius
-            var progress = (distance - landRadius) / range
-            progress = progress * progress * (3 - 2 * progress)
-            if (progress >= 0.9) {
-                chance(chunk, x, y, z)
-            } else {
-                chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
-            }
+            chance(chunk, x, y, z)
 
         } else {
             when (y) {
