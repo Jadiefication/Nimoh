@@ -94,9 +94,26 @@ class WorldGen: ChunkGenerator() {
             progress = progress * progress * (3 - 2 * progress)
             if (progress >= 0.9) {
                 chance(chunk, x, y, z)
+            } else {
+                chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
             }
+
         } else {
-            if (66 <= y && y <= 68) {
+            when (y) {
+                66 -> {
+                    chance(chunk, x, y, z, 3)
+                }
+                67 -> {
+                    chance(chunk, x, y, z, 4)
+                }
+                68 -> {
+                    chance(chunk, x, y, z, 5)
+                }
+                else -> {
+                    chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
+                }
+            }
+            /*if (66 <= y && y <= 68) {
                 if (Random().nextInt() % 5 == 0) {
                     chance(chunk, x, y, z)
                 } else {
@@ -104,7 +121,7 @@ class WorldGen: ChunkGenerator() {
                 }
             } else {
                 chunk.setBlock(x, y, z, Material.GRASS_BLOCK) // Topmost layer grass
-            }
+            }*/
         }
     }
 
@@ -113,6 +130,13 @@ class WorldGen: ChunkGenerator() {
             chunk.setBlock(x, y, z, Material.SAND)
         } else {
             chunk.setBlock(x, y, z, Material.GRAVEL)
+        }
+    }
+    private fun chance(chunk: ChunkData, x: Int, y: Int, z: Int, probability: Int) {
+        if (Random().nextInt() % probability == 0) {
+            chance(chunk, x, y, z)
+        } else {
+            chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
         }
     }
 }
