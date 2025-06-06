@@ -27,7 +27,7 @@ class WorldGen: ChunkGenerator() {
     private val landRadius = 300
     private val falloffRadius = 400
     private var distance: Double = 0.0
-    private val cellSize = 512
+    private val cellSize = 1024
     private val islandInCell = mutableMapOf(Vector2L(0, 0) to Vector2L(0, 0))
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
@@ -51,14 +51,19 @@ class WorldGen: ChunkGenerator() {
                     }
                 }
 
-                val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
-                val perlinNoise = pNoise.get(worldX * pScale, 0.0, worldZ * pScale)
-                val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                val height = sHeight * 0.7 + pHeight * 0.3
-                val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ, islandInCell[Vector2L(cellX, cellZ)]!!)).toInt()
+                val center = islandInCell[Vector2L(cellX, cellZ)]
 
-                setBlocks(finalHeight, chunk, x, z)
+                if (center != null) {
+                    val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
+                    val perlinNoise = pNoise.get(worldX * pScale, 0.0, worldZ * pScale)
+                    val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
+                    val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
+                    val height = sHeight * 0.7 + pHeight * 0.3
+                    val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ, center)).toInt()
+                    setBlocks(finalHeight, chunk, x, z)
+                } else {
+                    setBlocks(baseSea, chunk, x, z)
+                }
             }
         }
     }
