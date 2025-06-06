@@ -56,15 +56,17 @@ class WorldGen: ChunkGenerator() {
                 val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
                 val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
                 val height = sHeight * 0.7 + pHeight * 0.3
-                val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ)).toInt()
+                val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ, islandInCell[Vector2L(cellX, cellZ)]!!)).toInt()
 
                 setBlocks(finalHeight, chunk, x, z)
             }
         }
     }
 
-    private fun handleFalloff(x: Int, z: Int): Double {
-        distance = sqrt(x.toDouble().pow(2) + z.toDouble().pow(2))
+    private fun handleFalloff(x: Int, z: Int, center: Vector2L): Double {
+        val dx = x - center.x
+        val dz = z - center.y
+        distance = sqrt(dx.toDouble().pow(2) + dz.toDouble().pow(2))
 
         var falloffValue: Double
         if (distance <= landRadius) {
