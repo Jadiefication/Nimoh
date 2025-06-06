@@ -3,10 +3,13 @@ package io.main.gen
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
+import org.joml.Vector2L
 import org.joml.Vector3L
 import org.spongepowered.noise.module.source.Perlin
 import org.spongepowered.noise.module.source.Simplex
 import java.util.*
+import kotlin.math.PI
+import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -17,13 +20,15 @@ class WorldGen: ChunkGenerator() {
     private val terrainAmplitude = 40
     private val sScale = 0.005
     private val pScale = 0.0001
-    private val iScale = 0.0001
+    private val iScale = 0.001
     private val sNoise = Simplex()
     private val pNoise = Perlin()
     private val iNoise = Perlin()
-    private val landRadius = 400
-    private val falloffRadius = 600
+    private val landRadius = 300
+    private val falloffRadius = 400
     private var distance: Double = 0.0
+    private val cellSize = 512
+    private val islandInCell = mutableMapOf(Vector2L(0, 0) to Vector2L(0, 0))
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
         random.setSeed(worldInfo.seed)
@@ -36,33 +41,22 @@ class WorldGen: ChunkGenerator() {
                 val worldX = chunkX * 16 + x
                 val worldZ = chunkZ * 16 + z
 
-                val islandNoise = iNoise.get(worldX * iScale, 0.0, worldZ * iScale)
-                val iNoiseValue = (islandNoise + 1.0) / 2
+                val cellX = floor((worldX / cellSize).toDouble()).toLong()
+                val cellZ = floor((worldZ / cellSize).toDouble()).toLong()
+
+                if (!islandInCell.contains(Vector2L(cellX, cellZ))) {
+                    val islandNoise = iNoise.get(worldX * iScale, 0.0, worldZ * iScale)
+                    if (islandNoise <= 0.7) {
+                        islandInCell.put(Vector2L(cellX, cellZ), Vector2L(worldX.toLong(), worldZ.toLong()))
+                    }
+                }
 
                 val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
                 val perlinNoise = pNoise.get(worldX * pScale, 0.0, worldZ * pScale)
                 val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
                 val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
                 val height = sHeight * 0.7 + pHeight * 0.3
-
-                val finalHeight = when (iNoiseValue) {
-                    0.0 -> {
-                        baseSea
-                    }
-                    1.0 -> {
-                        height.toInt()
-                    }
-                    else -> {
-                        baseSea + ((height - baseSea) * iNoiseValue).toInt()
-                    }
-                }
-
-                /*val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
-                val perlinNoise = pNoise.get(worldX * pScale, 0.0, worldZ * pScale)
-                val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                val height = sHeight * 0.7 + pHeight * 0.3
-                val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ)).toInt()*/
+                val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ)).toInt()
 
                 setBlocks(finalHeight, chunk, x, z)
             }
