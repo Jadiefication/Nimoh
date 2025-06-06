@@ -1,5 +1,6 @@
 package io.main.gen
 
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
@@ -20,22 +21,19 @@ class WorldGen: ChunkGenerator() {
     private val terrainAmplitude = 40
     private val sScale = 0.005
     private val pScale = 0.0001
-    private val iScale = 0.001
     private val sNoise = Simplex()
     private val pNoise = Perlin()
-    private val iNoise = Perlin()
     private val landRadius = 300
     private val falloffRadius = 400
     private var distance: Double = 0.0
-    private val cellSize = 1024
-    private val islandInCell = mutableMapOf(Vector2L(0, 0) to Vector2L(0, 0))
+    private val cellSize = 1500
+    private val islandInCell = mutableMapOf((0L to 0L) to (0L to 0L))
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
         random.setSeed(worldInfo.seed)
         val seed = random.nextInt()
         sNoise.setSeed(seed)
         pNoise.setSeed(seed)
-        iNoise.setSeed(seed)
         for (x in 0..16) {
             for (z in 0..16) {
                 val worldX = chunkX * 16 + x
@@ -44,14 +42,15 @@ class WorldGen: ChunkGenerator() {
                 val cellX = floor((worldX / cellSize).toDouble()).toLong()
                 val cellZ = floor((worldZ / cellSize).toDouble()).toLong()
 
-                if (!islandInCell.contains(Vector2L(cellX, cellZ))) {
-                    val islandNoise = iNoise.get(worldX * iScale, 0.0, worldZ * iScale)
-                    if (islandNoise <= 0.7) {
-                        islandInCell.put(Vector2L(cellX, cellZ), Vector2L(worldX.toLong(), worldZ.toLong()))
+                if (!islandInCell.contains(cellX to cellZ)) {
+                    val centerX = cellX * cellSize + cellSize / 2
+                    val centerZ = cellZ * cellSize + cellSize / 2
+                    if (random.nextInt() % 4 == 0) {
+                        islandInCell.put((cellX to cellZ), (centerX to centerZ))
                     }
                 }
 
-                val center = islandInCell[Vector2L(cellX, cellZ)]
+                val center = islandInCell[cellX to cellZ]
 
                 if (center != null) {
                     val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
@@ -68,9 +67,9 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
-    private fun handleFalloff(x: Int, z: Int, center: Vector2L): Double {
-        val dx = x - center.x
-        val dz = z - center.y
+    private fun handleFalloff(x: Int, z: Int, center: Pair<Long, Long>): Double {
+        val dx = x - center.first
+        val dz = z - center.second
         distance = sqrt(dx.toDouble().pow(2) + dz.toDouble().pow(2))
 
         var falloffValue: Double
