@@ -26,8 +26,8 @@ class WorldGen: ChunkGenerator() {
     private val landRadius = 300
     private val falloffRadius = 400
     private var distance: Double = 0.0
-    private val cellSize = 1500
-    private val islandInCell = mutableMapOf((0L to 0L) to (0L to 0L))
+    private val cellSize = 1000
+    private val islandInCell = mutableMapOf<Pair<Long, Long>, Pair<Long, Long>>()
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
         random.setSeed(worldInfo.seed)
@@ -39,8 +39,8 @@ class WorldGen: ChunkGenerator() {
                 val worldX = chunkX * 16 + x
                 val worldZ = chunkZ * 16 + z
 
-                val cellX = floor((worldX / cellSize).toDouble()).toLong()
-                val cellZ = floor((worldZ / cellSize).toDouble()).toLong()
+                val cellX = floor((worldX.toDouble() / cellSize)).toLong()
+                val cellZ = floor((worldZ.toDouble() / cellSize)).toLong()
 
                 val cellSeed = Objects.hash(worldInfo.seed, cellX, cellZ)
                 val cellRandom = Random(cellSeed.toLong())
@@ -48,12 +48,12 @@ class WorldGen: ChunkGenerator() {
                 if (!islandInCell.contains(cellX to cellZ)) {
                     val centerX = cellX * cellSize + cellSize / 2
                     val centerZ = cellZ * cellSize + cellSize / 2
-                    if (cellRandom.nextInt(4) == 0) {
+                    if (cellRandom.nextInt(3) == 1) {
                         islandInCell.put((cellX to cellZ), (centerX to centerZ))
                     }
                 }
 
-                val center = islandInCell[cellX to cellZ]
+                val center = islandInCell[(cellX to cellZ)]
 
                 if (center != null) {
                     val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
