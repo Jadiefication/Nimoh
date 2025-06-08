@@ -17,16 +17,16 @@ import kotlin.math.sqrt
 
 class WorldGen: ChunkGenerator() {
 
-    private val baseSea = 62
-    private val terrainAmplitude = 40
-    private val sScale = 0.005
-    private val pScale = 0.0001
+    var baseSea = 62
+    var terrainAmplitude = 40
+    var sScale = 0.005
+    var pScale = 0.0001
     private val sNoise = Simplex()
     private val pNoise = Perlin()
-    private val landRadius = 300
-    private val falloffRadius = 400
+    var landRadius = 300
+    var falloffRadius = 400
     private var distance: Double = 0.0
-    private val cellSize = 1000
+    var cellSize = 1000
     private val islandInCell = mutableMapOf<Pair<Long, Long>, Pair<Long, Long>>()
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
