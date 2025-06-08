@@ -1,6 +1,9 @@
 package io.main.gen
 
+import io.main.gen.tree.TreeGen
 import org.bukkit.Material
+import org.bukkit.World
+import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
 import org.spongepowered.noise.module.source.Perlin
@@ -153,5 +156,9 @@ class WorldGen: ChunkGenerator() {
         } else {
             chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
         }
+    }
+
+    override fun getDefaultPopulators(world: World): List<BlockPopulator?> {
+        return listOf(TreeGen())
     }
 }
