@@ -1,16 +1,18 @@
 package io.main.gen.tree
 
 import org.bukkit.Material
-import org.bukkit.block.data.type.PointedDripstone
+import org.bukkit.block.BlockFace
+import org.bukkit.block.data.Directional
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.LimitedRegion
 import org.bukkit.generator.WorldInfo
-import org.joml.Vector3L
-import java.util.Random
+import org.bukkit.util.Vector
+import java.util.*
 
 class TreeGen: BlockPopulator() {
 
     private val maxDepth = 25
+    private val scale = 0.8562
 
     override fun populate(
         worldInfo: WorldInfo,
@@ -23,9 +25,9 @@ class TreeGen: BlockPopulator() {
             for (z in 0..16) {
                 val worldX = chunkX * 16 + x
                 val worldZ = chunkZ * 16 + z
-                if (random.nextInt(5) == 1) {
+                if (random.nextInt(100) == 1) {
                     val worldY = handleGettingFreeBlock(worldInfo, worldX, worldZ, limitedRegion)
-                    generateFractalTree(Vector3L(worldX, worldY, worldZ), Vector3L(0, 5, 0), 3, limitedRegion, random, 0)
+                    generateFractalTree(Vector(worldX, worldY, worldZ), Vector(0, 5, 0), limitedRegion, random, 0)
                 }
             }
         }
@@ -44,10 +46,44 @@ class TreeGen: BlockPopulator() {
         return freeBlock
     }
 
-    private fun generateFractalTree(basePos: Vector3L, direction: Vector3L, thickness: Int, limitedRegion: LimitedRegion, random: Random, iterationDepth: Int) {
+    private fun generateFractalTree(basePos: Vector, direction: Vector, limitedRegion: LimitedRegion, random: Random, iterationDepth: Int) {
+        val oak = Material.OAK_LOG.createBlockData() as Directional
+        oak.facing = BlockFace.UP
         if (direction.length() < 1 || iterationDepth >= maxDepth) {
 
             return
+        } else {
+            val unitDirection = direction.normalize()
+            for (i in 0..direction.length().toInt()) {
+                val step = basePos.clone().add(unitDirection.clone().multiply(i))
+                val x = step.x.toInt()
+                val y = step.y.toInt()
+                val z = step.z.toInt()
+                limitedRegion.setBlockData(x, y, z, oak)
+            }
+
+            val newPos = basePos.clone().add(direction)
+            val newLength = direction.length() * scale
+
+            val axis1 = direction.crossProduct(Vector(1, 0, 0)).normalize()
+            val axis2 = direction.crossProduct(Vector(0, 0, 1)).normalize()
+            val branchAngleA = Math.toRadians(30.0) + (random.nextDouble(0.0, 90.0) - 0.5)
+            val branchAngleB = Math.toRadians(30.0) + (random.nextDouble(0.0, 90.0) - 0.5)
+
+            val newDirectionA = direction.clone()
+                .rotateAroundAxis(axis1, branchAngleA)
+                .rotateAroundAxis(axis2, branchAngleB)
+                .normalize()
+                .multiply(newLength)
+
+            val newDirectionB = direction.clone()
+                .rotateAroundAxis(axis1, -branchAngleA)
+                .rotateAroundAxis(axis2, branchAngleB)
+                .normalize()
+                .multiply(newLength)
+
+            generateFractalTree(newPos, newDirectionA, limitedRegion, random, iterationDepth + 1)
+            generateFractalTree(newPos, newDirectionB, limitedRegion, random, iterationDepth + 1)
         }
     }
 }
