@@ -28,7 +28,6 @@ class WorldGen: ChunkGenerator() {
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
         if (!seedsSet) {
-            random.setSeed(worldInfo.seed)
             val seed = random.nextInt()
             sNoise.setSeed(seed)
             pNoise.setSeed(seed)
@@ -42,7 +41,7 @@ class WorldGen: ChunkGenerator() {
                 val cellX = floor((worldX.toDouble() / cellSize)).toLong()
                 val cellZ = floor((worldZ.toDouble() / cellSize)).toLong()
 
-                handleIslandCenter(cellX, cellZ, random)
+                handleIslandCenter(cellX, cellZ, worldInfo.seed)
 
                 val center = islandInCell[(cellX to cellZ)]
 
@@ -61,11 +60,15 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
-    private fun handleIslandCenter(cellX: Long, cellZ: Long, random: Random) {
+    private fun handleIslandCenter(cellX: Long, cellZ: Long, worldSeed: Long) {
         if (!islandInCell.contains(cellX to cellZ)) {
             val centerX = cellX * cellSize + cellSize / 2
             val centerZ = cellZ * cellSize + cellSize / 2
-            if (random.nextInt(10) == 1) {
+
+            val cellSeed = worldSeed xor (cellX * 782987399) xor (cellZ * 978937987)
+            val cellRandom = Random(cellSeed)
+
+            if (cellRandom.nextInt(10) == 1) {
                 islandInCell.put((cellX to cellZ), (centerX to centerZ))
             }
         }
