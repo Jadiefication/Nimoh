@@ -8,6 +8,7 @@ import org.bukkit.generator.LimitedRegion
 import org.bukkit.generator.WorldInfo
 import org.bukkit.util.Vector
 import java.util.*
+import kotlin.math.abs
 
 class TreeGen: BlockPopulator() {
 
@@ -35,7 +36,7 @@ class TreeGen: BlockPopulator() {
 
     private fun handleGettingFreeBlock(worldInfo: WorldInfo, x: Int, z: Int, limitedRegion: LimitedRegion): Int {
         var freeBlock = worldInfo.maxHeight
-        for (y in 0..freeBlock) {
+        for (y in freeBlock downTo 0) {
             if (limitedRegion.getBlockData(x, y, z).material == Material.AIR && (
                         limitedRegion.getBlockData(x, y - 1, z).material == Material.GRASS_BLOCK || limitedRegion.getBlockData(x, y - 1, z).material == Material.DIRT)) {
                 freeBlock = y
@@ -65,18 +66,18 @@ class TreeGen: BlockPopulator() {
             val newPos = basePos.clone().add(direction)
             val newLength = direction.length() * scale
 
-            val axis1 = direction.crossProduct(Vector(1, 0, 0)).normalize()
-            val axis2 = direction.crossProduct(Vector(0, 0, 1)).normalize()
-            val branchAngleA = Math.toRadians(30.0) + (random.nextDouble(0.0, 90.0) - 0.5)
-            val branchAngleB = Math.toRadians(30.0) + (random.nextDouble(0.0, 90.0) - 0.5)
+            val axis1 = (if (abs(direction.y) <= 1) direction.crossProduct(Vector(1, 0, 0)) else direction.crossProduct(Vector(0, 1, 0))).normalize()
 
-            val newDirectionA = direction.clone()
+            val axis2 = direction.crossProduct(axis1).normalize()
+            val branchAngleA = Math.toRadians(30.0) + (random.nextDouble() - 0.1)
+            val branchAngleB = Math.toRadians(30.0) + (random.nextDouble() - 0.1)
+
+            val newDirectionA = unitDirection.clone()
                 .rotateAroundAxis(axis1, branchAngleA)
                 .rotateAroundAxis(axis2, branchAngleB)
-                .normalize()
                 .multiply(newLength)
 
-            val newDirectionB = direction.clone()
+            val newDirectionB = unitDirection.clone()
                 .rotateAroundAxis(axis1, -branchAngleA)
                 .rotateAroundAxis(axis2, branchAngleB)
                 .normalize()
