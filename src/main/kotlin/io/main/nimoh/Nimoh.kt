@@ -11,6 +11,7 @@ class Nimoh : JavaPlugin() {
     private val worldGen = WorldGen()
 
     override fun onEnable() {
+        saveResource("config.yml", false)
         saveDefaultConfig()
         values.forEachIndexed { index, value ->
             when (index) {
