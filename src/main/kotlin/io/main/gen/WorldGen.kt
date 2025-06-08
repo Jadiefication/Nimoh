@@ -1,15 +1,11 @@
 package io.main.gen
 
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
-import org.joml.Vector2L
-import org.joml.Vector3L
 import org.spongepowered.noise.module.source.Perlin
 import org.spongepowered.noise.module.source.Simplex
 import java.util.*
-import kotlin.math.PI
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -28,12 +24,16 @@ class WorldGen: ChunkGenerator() {
     private var distance: Double = 0.0
     var cellSize = 1000
     private val islandInCell = mutableMapOf<Pair<Long, Long>, Pair<Long, Long>>()
+    private var seedsSet = false
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
-        random.setSeed(worldInfo.seed)
-        val seed = random.nextInt()
-        sNoise.setSeed(seed)
-        pNoise.setSeed(seed)
+        if (!seedsSet) {
+            random.setSeed(worldInfo.seed)
+            val seed = random.nextInt()
+            sNoise.setSeed(seed)
+            pNoise.setSeed(seed)
+            seedsSet = true
+        }
         for (x in 0..16) {
             for (z in 0..16) {
                 val worldX = chunkX * 16 + x
@@ -42,14 +42,7 @@ class WorldGen: ChunkGenerator() {
                 val cellX = floor((worldX.toDouble() / cellSize)).toLong()
                 val cellZ = floor((worldZ.toDouble() / cellSize)).toLong()
 
-
-                if (!islandInCell.contains(cellX to cellZ)) {
-                    val centerX = cellX * cellSize + cellSize / 2
-                    val centerZ = cellZ * cellSize + cellSize / 2
-                    if (random.nextInt(10) == 1) {
-                        islandInCell.put((cellX to cellZ), (centerX to centerZ))
-                    }
-                }
+                handleIslandCenter(cellX, cellZ, random)
 
                 val center = islandInCell[(cellX to cellZ)]
 
@@ -64,6 +57,16 @@ class WorldGen: ChunkGenerator() {
                 } else {
                     setBlocks(baseSea, chunk, x, z)
                 }
+            }
+        }
+    }
+
+    private fun handleIslandCenter(cellX: Long, cellZ: Long, random: Random) {
+        if (!islandInCell.contains(cellX to cellZ)) {
+            val centerX = cellX * cellSize + cellSize / 2
+            val centerZ = cellZ * cellSize + cellSize / 2
+            if (random.nextInt(10) == 1) {
+                islandInCell.put((cellX to cellZ), (centerX to centerZ))
             }
         }
     }
