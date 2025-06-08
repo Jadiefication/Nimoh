@@ -1,0 +1,7 @@
+baseSea: 62
+terrainAmplitude: 40
+sScale: 0.005
+pScale: 0.0001
+landRadius: 300
+falloffRadius: 400
+cellSize: 1000
