@@ -42,13 +42,11 @@ class WorldGen: ChunkGenerator() {
                 val cellX = floor((worldX.toDouble() / cellSize)).toLong()
                 val cellZ = floor((worldZ.toDouble() / cellSize)).toLong()
 
-                val cellSeed = Objects.hash(worldInfo.seed, cellX, cellZ)
-                val cellRandom = Random(cellSeed.toLong())
 
                 if (!islandInCell.contains(cellX to cellZ)) {
                     val centerX = cellX * cellSize + cellSize / 2
                     val centerZ = cellZ * cellSize + cellSize / 2
-                    if (cellRandom.nextInt(3) == 1) {
+                    if (random.nextInt(10) == 1) {
                         islandInCell.put((cellX to cellZ), (centerX to centerZ))
                     }
                 }
