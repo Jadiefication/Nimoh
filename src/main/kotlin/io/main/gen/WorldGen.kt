@@ -26,7 +26,7 @@ class WorldGen: ChunkGenerator() {
     var falloffRadius = 400
     private var distance: Double = 0.0
     var cellSize = 1000
-    private val islandInCell = mutableMapOf<Pair<Long, Long>, Pair<Long, Long>>()
+    internal val islandInCell = mutableMapOf<Pair<Long, Long>, Pair<Long, Long>>()
     private var seedsSet = false
 
     override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
