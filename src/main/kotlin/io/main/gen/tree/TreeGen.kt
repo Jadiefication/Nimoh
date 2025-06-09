@@ -62,16 +62,16 @@ class TreeGen(
     }
 
     private fun handleGettingFreeBlock(worldInfo: WorldInfo, x: Int, z: Int, limitedRegion: LimitedRegion): Int {
-        var freeBlock = worldInfo.maxHeight - 1
+        val freeBlock = worldInfo.maxHeight - 1
         for (y in freeBlock downTo 2) {
             if (limitedRegion.getBlockData(x, y, z).material == Material.AIR && (
                         limitedRegion.getBlockData(x, y - 1, z).material == Material.GRASS_BLOCK || limitedRegion.getBlockData(x, y - 1, z).material == Material.DIRT)) {
-                freeBlock = y
+                return y
             } else {
                 continue
             }
         }
-        return if (freeBlock == worldInfo.maxHeight - 1) -0x8 else freeBlock
+        return -0x8
     }
 
     private fun generateFractalTree(basePos: Vector, direction: Vector, limitedRegion: LimitedRegion, random: Random, iterationDepth: Int) {
@@ -88,21 +88,23 @@ class TreeGen(
                 val y = step.y.toInt()
                 val z = step.z.toInt()
 
-                if (limitedRegion.isInRegion(x, y, z)) {
-                    limitedRegion.setBlockData(x, y, z, oak)
-                }
+                limitedRegion.setBlockData(x, y, z, oak)
             }
 
             val newPos = basePos.clone().add(direction)
             val newLength = direction.length() * scale
 
-            val axis1 = (if (abs(direction.y) <= 1) direction.crossProduct(Vector(1, 0, 0)) else direction.crossProduct(Vector(0, 1, 0))).normalize()
+            val axis1 = if (abs(direction.y) < 0.9) {
+                direction.crossProduct(Vector(0, 1, 0)).normalize()
+            } else {
+                direction.crossProduct(Vector(1, 0, 0)).normalize()
+            }
 
             val axis2 = direction.crossProduct(axis1).normalize()
             val branchAngleA = Math.toRadians(30.0) + (random.nextDouble() - 0.1)
             val branchAngleB = Math.toRadians(30.0) + (random.nextDouble() - 0.1)
 
-            val newDirectionA = unitDirection.clone()
+            /*val newDirectionA = unitDirection.clone()
                 .rotateAroundAxis(axis1, branchAngleA)
                 .rotateAroundAxis(axis2, branchAngleB)
                 .multiply(newLength)
@@ -111,7 +113,10 @@ class TreeGen(
                 .rotateAroundAxis(axis1, -branchAngleA)
                 .rotateAroundAxis(axis2, branchAngleB)
                 .normalize()
-                .multiply(newLength)
+                .multiply(newLength)*/
+
+            val newDirectionA = Vector(2, 3, 1).multiply(newLength)
+            val newDirectionB = Vector(-2, 3, -1).multiply(newLength)
 
             generateFractalTree(newPos, newDirectionA, limitedRegion, random, iterationDepth + 1)
             generateFractalTree(newPos, newDirectionB, limitedRegion, random, iterationDepth + 1)
