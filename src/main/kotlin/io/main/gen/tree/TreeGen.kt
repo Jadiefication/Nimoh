@@ -1,5 +1,6 @@
 package io.main.gen.tree
 
+import io.main.gen.WorldGen
 import org.bukkit.Axis
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
@@ -11,10 +12,13 @@ import org.bukkit.generator.WorldInfo
 import org.bukkit.util.Vector
 import java.util.*
 import kotlin.math.abs
+import kotlin.math.floor
 
-class TreeGen: BlockPopulator() {
+class TreeGen(
+    val worldGen: WorldGen
+): BlockPopulator() {
 
-    private val maxDepth = 25
+    private val maxDepth = 6
     private val scale = 0.8562
 
     override fun populate(
@@ -26,20 +30,40 @@ class TreeGen: BlockPopulator() {
     ) {
         for (x in 0..16) {
             for (z in 0..16) {
-                val worldX = chunkX * 16 + x
-                val worldZ = chunkZ * 16 + z
-                if (random.nextInt(100) == 1) {
-                    val worldY = handleGettingFreeBlock(worldInfo, worldX, worldZ, limitedRegion)
-                    if (worldY == -0x8) continue
-                    generateFractalTree(Vector(worldX, worldY, worldZ), Vector(0, 5, 0), limitedRegion, random, 0)
-                }
+                handleChance(x, z, random, limitedRegion, worldInfo, chunkX, chunkZ)
             }
+        }
+    }
+
+    private fun handleChance(
+        x: Int,
+        z: Int,
+        random: Random,
+        limitedRegion: LimitedRegion,
+        worldInfo: WorldInfo,
+        chunkX: Int,
+        chunkZ: Int
+    ) {
+        val worldX = chunkX * 16 + x
+        val worldZ = chunkZ * 16 + z
+
+        val cellX = floor((worldX.toDouble() / worldGen.cellSize)).toLong()
+        val cellZ = floor((worldZ.toDouble() / worldGen.cellSize)).toLong()
+
+        if (worldGen.islandInCell.contains(cellX to cellZ)) {
+            if (random.nextInt(100) == 1) {
+                val worldY = handleGettingFreeBlock(worldInfo, worldX, worldZ, limitedRegion)
+                if (worldY == -0x8) return
+                generateFractalTree(Vector(worldX, worldY, worldZ), Vector(0, 5, 0), limitedRegion, random, 0)
+            }
+        } else {
+            return
         }
     }
 
     private fun handleGettingFreeBlock(worldInfo: WorldInfo, x: Int, z: Int, limitedRegion: LimitedRegion): Int {
         var freeBlock = worldInfo.maxHeight - 1
-        for (y in freeBlock downTo 0) {
+        for (y in freeBlock downTo 2) {
             if (limitedRegion.getBlockData(x, y, z).material == Material.AIR && (
                         limitedRegion.getBlockData(x, y - 1, z).material == Material.GRASS_BLOCK || limitedRegion.getBlockData(x, y - 1, z).material == Material.DIRT)) {
                 freeBlock = y
@@ -63,7 +87,10 @@ class TreeGen: BlockPopulator() {
                 val x = step.x.toInt()
                 val y = step.y.toInt()
                 val z = step.z.toInt()
-                limitedRegion.setBlockData(x, y, z, oak)
+
+                if (limitedRegion.isInRegion(x, y, z)) {
+                    limitedRegion.setBlockData(x, y, z, oak)
+                }
             }
 
             val newPos = basePos.clone().add(direction)
