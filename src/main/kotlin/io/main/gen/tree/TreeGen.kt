@@ -1,8 +1,10 @@
 package io.main.gen.tree
 
+import org.bukkit.Axis
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
+import org.bukkit.block.data.Orientable
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.LimitedRegion
 import org.bukkit.generator.WorldInfo
@@ -28,6 +30,7 @@ class TreeGen: BlockPopulator() {
                 val worldZ = chunkZ * 16 + z
                 if (random.nextInt(100) == 1) {
                     val worldY = handleGettingFreeBlock(worldInfo, worldX, worldZ, limitedRegion)
+                    if (worldY == -0x8) continue
                     generateFractalTree(Vector(worldX, worldY, worldZ), Vector(0, 5, 0), limitedRegion, random, 0)
                 }
             }
@@ -35,7 +38,7 @@ class TreeGen: BlockPopulator() {
     }
 
     private fun handleGettingFreeBlock(worldInfo: WorldInfo, x: Int, z: Int, limitedRegion: LimitedRegion): Int {
-        var freeBlock = worldInfo.maxHeight
+        var freeBlock = worldInfo.maxHeight - 1
         for (y in freeBlock downTo 0) {
             if (limitedRegion.getBlockData(x, y, z).material == Material.AIR && (
                         limitedRegion.getBlockData(x, y - 1, z).material == Material.GRASS_BLOCK || limitedRegion.getBlockData(x, y - 1, z).material == Material.DIRT)) {
@@ -44,12 +47,12 @@ class TreeGen: BlockPopulator() {
                 continue
             }
         }
-        return freeBlock
+        return if (freeBlock == worldInfo.maxHeight - 1) -0x8 else freeBlock
     }
 
     private fun generateFractalTree(basePos: Vector, direction: Vector, limitedRegion: LimitedRegion, random: Random, iterationDepth: Int) {
-        val oak = Material.OAK_LOG.createBlockData() as Directional
-        oak.facing = BlockFace.UP
+        val oak = Material.OAK_LOG.createBlockData() as Orientable
+        oak.axis = Axis.Y
         if (direction.length() < 1 || iterationDepth >= maxDepth) {
 
             return
