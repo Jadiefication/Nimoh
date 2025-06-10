@@ -104,8 +104,6 @@ class TreeGen(
                 val y = step.y.toInt()
                 val z = step.z.toInt()
 
-                println("basePos: $basePos, x,y,z: $x, $y, $z, direction: $direction, iterationDepth: $iterationDepth, newLength: ${direction.length() * scale}, length: ${direction.length()}")
-
                 limitedRegion.setBlockData(x, y, z, oak)
             }
 
@@ -115,7 +113,6 @@ class TreeGen(
 
     private fun handleNaN(direction: Vector, iterationDepth: Int): Boolean {
         return if (direction.x.isNaN() || direction.y.isNaN() || direction.z.isNaN() || direction.lengthSquared() < epsilon * epsilon || iterationDepth >= maxDepth) {
-            println("Terminating branch at depth $iterationDepth due to invalid direction or length.")
             true
         } else {
             false
@@ -126,35 +123,25 @@ class TreeGen(
         val newPos = basePos.clone().add(direction)
         val newLength = direction.length() * scale
 
-        val referenceVector = if (abs(unitDirection.dot(Vector(0, 1, 0))) > 1.0 - epsilon) {
+        val referenceVector = if (abs(unitDirection.clone().dot(Vector(0, 1, 0))) > 1.0 - epsilon) {
             Vector(1, 0, 0)
         } else {
             Vector(0, 1, 0)
         }
 
-        var axis1 = unitDirection.crossProduct(referenceVector).normalize()
+        var axis1 = unitDirection.clone().crossProduct(referenceVector).normalize()
 
         if (axis1.lengthSquared() < epsilon * epsilon) {
-            axis1 = unitDirection.crossProduct(Vector(0, 0, 1)).normalize()
+            axis1 = unitDirection.clone().crossProduct(Vector(0, 0, 1)).normalize()
 
             if (axis1.lengthSquared() < epsilon * epsilon) {
                 error("CRITICAL ERROR: Failed to generate a non-zero axis1 for direction $direction at depth $iterationDepth.")
             }
         }
 
-        val axis2 = unitDirection.crossProduct(axis1).normalize()
+        val axis2 = unitDirection.clone().crossProduct(axis1).normalize()
         val branchAngleA = Math.toRadians(30.0) + (random.nextDouble() - 0.1)
         val branchAngleB = Math.toRadians(30.0) + (random.nextDouble() - 0.1)
-
-        /*val newDirectionA = unitDirection.clone()
-            .rotateAroundAxis(axis1, branchAngleA)
-            .rotateAroundAxis(axis2, branchAngleB)
-            .multiply(newLength)
-
-        val newDirectionB = unitDirection.clone()
-            .rotateAroundAxis(axis1, -branchAngleA)
-            .rotateAroundAxis(axis2, branchAngleB)
-            .multiply(newLength)*/
 
         val rotatedA_step1 = rotateVectorDebug(unitDirection.clone(), axis1, branchAngleA, "A_step1", iterationDepth)
         val newDirectionA_unscaled = rotateVectorDebug(rotatedA_step1, axis2, branchAngleB, "A_step2", iterationDepth)
@@ -163,12 +150,6 @@ class TreeGen(
         val rotatedB_step1 = rotateVectorDebug(unitDirection.clone(), axis1, -branchAngleA, "B_step1", iterationDepth)
         val newDirectionB_unscaled = rotateVectorDebug(rotatedB_step1, axis2, branchAngleB, "B_step2", iterationDepth)
             .multiply(newLength)
-
-        /*println("DEBUG: newDirectionA = $newDirectionA, length = ${newDirectionA.length()}, isNaN = ${newDirectionA.x.isNaN() || newDirectionA.y.isNaN() || newDirectionA.z.isNaN()}, axis1: $axis1, axis2: $axis2")
-        println("DEBUG: newDirectionB = $newDirectionB, length = ${newDirectionB.length()}, isNaN = ${newDirectionB.x.isNaN() || newDirectionB.y.isNaN() || newDirectionB.z.isNaN()}")
-
-        val newDirectionA = Vector(4, 3, 2).multiply(newLength)
-        val newDirectionB = Vector(-2, 3, -1).multiply(newLength)*/
 
         generateFractalTree(newPos, newDirectionA_unscaled, limitedRegion, random, iterationDepth + 1)
         generateFractalTree(newPos, newDirectionB_unscaled, limitedRegion, random, iterationDepth + 1)
@@ -186,18 +167,11 @@ class TreeGen(
         val sinTheta = sin(angle)
         val dotProduct = vec.dot(axis)
 
-        // Debug prints for intermediate values
-        println("ROTATE_DEBUG[$debugTag, depth $iterationDepth]: Rotating vector $vec around axis $axis by angle $angle (rad).")
-        println("ROTATE_DEBUG[$debugTag, depth $iterationDepth]: x=$x, y=$y, z=$z")
-        println("ROTATE_DEBUG[$debugTag, depth $iterationDepth]: axis_x=$x2, axis_y=$y2, axis_z=$z2")
-        println("ROTATE_DEBUG[$debugTag, depth $iterationDepth]: cosTheta=$cosTheta, sinTheta=$sinTheta, dotProduct=$dotProduct")
-
         val xPrime = x2 * dotProduct * (1.0 - cosTheta) + x * cosTheta + (-z2 * y + y2 * z) * sinTheta
         val yPrime = y2 * dotProduct * (1.0 - cosTheta) + y * cosTheta + (z2 * x - x2 * z) * sinTheta
         val zPrime = z2 * dotProduct * (1.0 - cosTheta) + z * cosTheta + (-y2 * x + x2 * y) * sinTheta
 
         val result = Vector(xPrime, yPrime, zPrime)
-        println("ROTATE_DEBUG[$debugTag, depth $iterationDepth]: Resulting vector: $result, length: ${result.length()}, isNaN: ${result.x.isNaN() || result.y.isNaN() || result.z.isNaN()}")
         return result
     }
 }
