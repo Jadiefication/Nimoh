@@ -3,8 +3,6 @@ package io.main.gen.tree
 import io.main.gen.WorldGen
 import org.bukkit.Axis
 import org.bukkit.Material
-import org.bukkit.block.BlockFace
-import org.bukkit.block.data.Directional
 import org.bukkit.block.data.Orientable
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.LimitedRegion
@@ -54,14 +52,14 @@ class TreeGen(
         val cellZ = floor((worldZ.toDouble() / worldGen.cellSize)).toLong()
 
         if (worldGen.islandInCell.contains(cellX to cellZ)) {
-            if (random.nextInt(200) == 1) {
+            if (random.nextInt(500) == 1) {
                 val worldY = handleGettingFreeBlock(worldInfo, worldX, worldZ, limitedRegion)
                 if (worldY == -0x8) return
                 generateFractalTree(Vector(worldX, worldY, worldZ), Vector(
                     (random.nextDouble() - 0.5) * 0.1, // Small random X offset
-                    12.0,                               // Main Y direction
+                    6.0,                               // Main Y direction
                     (random.nextDouble() - 0.5) * 0.1   // Small random Z offset
-                ).normalize().multiply(12.0), limitedRegion, random, 0)
+                ).normalize().multiply(6.0), limitedRegion, random, 0)
             }
         } else {
             return
@@ -112,11 +110,7 @@ class TreeGen(
     }
 
     private fun handleNaN(direction: Vector, iterationDepth: Int): Boolean {
-        return if (direction.x.isNaN() || direction.y.isNaN() || direction.z.isNaN() || direction.lengthSquared() < epsilon * epsilon || iterationDepth >= maxDepth) {
-            true
-        } else {
-            false
-        }
+        return direction.x.isNaN() || direction.y.isNaN() || direction.z.isNaN() || direction.lengthSquared() < epsilon * epsilon || iterationDepth >= maxDepth
     }
 
     private fun handleMath(basePos: Vector, direction: Vector, random: Random, unitDirection: Vector, limitedRegion: LimitedRegion, iterationDepth: Int) {
@@ -143,19 +137,19 @@ class TreeGen(
         val branchAngleA = Math.toRadians(30.0) + (random.nextDouble() - 0.1)
         val branchAngleB = Math.toRadians(30.0) + (random.nextDouble() - 0.1)
 
-        val rotatedA_step1 = rotateVectorDebug(unitDirection.clone(), axis1, branchAngleA, "A_step1", iterationDepth)
-        val newDirectionA_unscaled = rotateVectorDebug(rotatedA_step1, axis2, branchAngleB, "A_step2", iterationDepth)
+        val rotatedAStep1 = rotateVectorDebug(unitDirection.clone(), axis1, branchAngleA)
+        val newDirectionAUnscaled = rotateVectorDebug(rotatedAStep1, axis2, branchAngleB)
             .multiply(newLength)
 
-        val rotatedB_step1 = rotateVectorDebug(unitDirection.clone(), axis1, -branchAngleA, "B_step1", iterationDepth)
-        val newDirectionB_unscaled = rotateVectorDebug(rotatedB_step1, axis2, branchAngleB, "B_step2", iterationDepth)
+        val rotatedBStep1 = rotateVectorDebug(unitDirection.clone(), axis1, -branchAngleA)
+        val newDirectionBUnscaled = rotateVectorDebug(rotatedBStep1, axis2, branchAngleB)
             .multiply(newLength)
 
-        generateFractalTree(newPos, newDirectionA_unscaled, limitedRegion, random, iterationDepth + 1)
-        generateFractalTree(newPos, newDirectionB_unscaled, limitedRegion, random, iterationDepth + 1)
+        generateFractalTree(newPos, newDirectionAUnscaled, limitedRegion, random, iterationDepth + 1)
+        generateFractalTree(newPos, newDirectionBUnscaled, limitedRegion, random, iterationDepth + 1)
     }
 
-    private fun rotateVectorDebug(vec: Vector, axis: Vector, angle: Double, debugTag: String, iterationDepth: Int): Vector {
+    private fun rotateVectorDebug(vec: Vector, axis: Vector, angle: Double): Vector {
         val x = vec.getX()
         val y = vec.getY()
         val z = vec.getZ()
