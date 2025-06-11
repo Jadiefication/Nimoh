@@ -12,6 +12,7 @@ import java.util.*
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.pow
 import kotlin.math.sin
 
 class TreeGen(
@@ -21,6 +22,7 @@ class TreeGen(
     private val maxDepth = 6
     private val scale = 0.8562
     private val epsilon = 1e-6
+    private val leafRadius = 3
 
     override fun populate(
         worldInfo: WorldInfo,
@@ -93,6 +95,7 @@ class TreeGen(
         }
 
         if (direction.length() < 1 || iterationDepth >= maxDepth) {
+            handleLeaves(basePos, limitedRegion, random)
 
             return
         } else {
@@ -106,6 +109,26 @@ class TreeGen(
             }
 
             handleMath(basePos, direction, random, unitDirection, limitedRegion, iterationDepth)
+        }
+    }
+
+    private fun handleLeaves(basePos: Vector, limitedRegion: LimitedRegion, random: Random) {
+        val xCenter = basePos.x
+        val yCenter = basePos.y
+        val zCenter = basePos.z
+
+        for (x in (xCenter - leafRadius).toInt()..(xCenter + leafRadius).toInt()) {
+            for (y in (yCenter - leafRadius).toInt()..(yCenter + leafRadius).toInt()) {
+                for (z in (zCenter - leafRadius).toInt()..(zCenter + leafRadius).toInt()) {
+                    val distanceSquared = (x - xCenter).pow(2) + (y - yCenter).pow(2) + (z - zCenter).pow(2)
+                    if (distanceSquared <= leafRadius * leafRadius) {
+                        val probability = random.nextInt(0, 1)
+                        if (probability >= 0.8) {
+                            limitedRegion.setBlockData(x, y, z, Material.OAK_LEAVES.createBlockData())
+                        }
+                    }
+                }
+            }
         }
     }
 
