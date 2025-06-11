@@ -122,7 +122,7 @@ class TreeGen(
                 for (z in (zCenter - leafRadius).toInt()..(zCenter + leafRadius).toInt()) {
                     val distanceSquared = (x - xCenter).pow(2) + (y - yCenter).pow(2) + (z - zCenter).pow(2)
                     if (distanceSquared <= leafRadius * leafRadius) {
-                        val probability = random.nextInt(0, 1)
+                        val probability = random.nextDouble(0.0, 1.0)
                         if (probability >= 0.8) {
                             limitedRegion.setBlockData(x, y, z, Material.OAK_LEAVES.createBlockData())
                         }
