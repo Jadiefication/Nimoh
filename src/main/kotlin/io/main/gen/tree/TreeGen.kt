@@ -22,7 +22,7 @@ class TreeGen(
     private val maxDepth = 6
     private val scale = 0.8562
     private val epsilon = 1e-6
-    private val leafRadius = 3
+    private val leafRadius = 5
 
     override fun populate(
         worldInfo: WorldInfo,
@@ -85,7 +85,7 @@ class TreeGen(
         val oak = Material.OAK_LOG.createBlockData() as Orientable
         oak.axis = Axis.Y
 
-        if (handleNaN(direction, iterationDepth)) {
+        if (handleNaN(direction)) {
             return
         }
 
@@ -95,7 +95,7 @@ class TreeGen(
         }
 
         if (direction.length() < 1 || iterationDepth >= maxDepth) {
-            handleLeaves(basePos, limitedRegion, random)
+            handleLeaves(basePos, limitedRegion)
 
             return
         } else {
@@ -112,7 +112,7 @@ class TreeGen(
         }
     }
 
-    private fun handleLeaves(basePos: Vector, limitedRegion: LimitedRegion, random: Random) {
+    private fun handleLeaves(basePos: Vector, limitedRegion: LimitedRegion) {
         val xCenter = basePos.x
         val yCenter = basePos.y
         val zCenter = basePos.z
@@ -121,19 +121,17 @@ class TreeGen(
             for (y in (yCenter - leafRadius).toInt()..(yCenter + leafRadius).toInt()) {
                 for (z in (zCenter - leafRadius).toInt()..(zCenter + leafRadius).toInt()) {
                     val distanceSquared = (x - xCenter).pow(2) + (y - yCenter).pow(2) + (z - zCenter).pow(2)
+                    //println("distanceSquared: $distanceSquared, x: $x, y: $y, z: $z for xCenter: $xCenter, yCenter: $yCenter, zCenter: $zCenter")
                     if (distanceSquared <= leafRadius * leafRadius) {
-                        val probability = random.nextDouble(0.0, 1.0)
-                        if (probability >= 0.8) {
-                            limitedRegion.setBlockData(x, y, z, Material.OAK_LEAVES.createBlockData())
-                        }
+                        limitedRegion.setBlockData(x, y, z, Material.OAK_LEAVES.createBlockData())
                     }
                 }
             }
         }
     }
 
-    private fun handleNaN(direction: Vector, iterationDepth: Int): Boolean {
-        return direction.x.isNaN() || direction.y.isNaN() || direction.z.isNaN() || direction.lengthSquared() < epsilon * epsilon || iterationDepth >= maxDepth
+    private fun handleNaN(direction: Vector): Boolean {
+        return direction.x.isNaN() || direction.y.isNaN() || direction.z.isNaN() || direction.lengthSquared() < epsilon * epsilon
     }
 
     private fun handleMath(basePos: Vector, direction: Vector, random: Random, unitDirection: Vector, limitedRegion: LimitedRegion, iterationDepth: Int) {
