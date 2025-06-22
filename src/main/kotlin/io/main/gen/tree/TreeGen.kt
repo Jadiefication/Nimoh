@@ -19,10 +19,14 @@ class TreeGen(
     val worldGen: WorldGen
 ): BlockPopulator() {
 
-    private val maxDepth = 6
+    private val maxDepth = 4
     private val scale = 0.8562
     private val epsilon = 1e-6
-    private val leafRadius = 5
+    private val leafRadius = 3
+    private val air = Material.AIR.createBlockData()
+    private val leaves = Material.OAK_LEAVES.createBlockData()
+    private lateinit var previousDirectionA: Vector
+    private lateinit var previousDirectionB: Vector
 
     override fun populate(
         worldInfo: WorldInfo,
@@ -95,7 +99,8 @@ class TreeGen(
         }
 
         if (direction.length() < 1 || iterationDepth >= maxDepth) {
-            handleLeaves(basePos, limitedRegion)
+            handleLeaves(basePos, limitedRegion, previousDirectionA, random)
+            handleLeaves(basePos, limitedRegion, previousDirectionB, random)
 
             return
         } else {
@@ -112,7 +117,26 @@ class TreeGen(
         }
     }
 
-    private fun handleLeaves(basePos: Vector, limitedRegion: LimitedRegion) {
+    private fun handleLeaves(
+        basePos: Vector,
+        limitedRegion: LimitedRegion,
+        direction: Vector,
+        random: Random
+    ) {
+        val unitDirection = direction.normalize()
+        for (i in 0..direction.length().toInt() - random.nextInt(2, 4)) {
+            val step = basePos.clone().add(unitDirection.clone().multiply(i))
+            val x = step.x.toInt()
+            val y = step.y.toInt()
+            val z = step.z.toInt()
+
+            placeLeaves(limitedRegion, Vector(x, y, z))
+        }
+
+        //placeLeaves(limitedRegion, basePos)
+    }
+
+    private fun placeLeaves(limitedRegion: LimitedRegion, basePos: Vector) {
         val xCenter = basePos.x
         val yCenter = basePos.y
         val zCenter = basePos.z
@@ -121,9 +145,10 @@ class TreeGen(
             for (y in (yCenter - leafRadius).toInt()..(yCenter + leafRadius).toInt()) {
                 for (z in (zCenter - leafRadius).toInt()..(zCenter + leafRadius).toInt()) {
                     val distanceSquared = (x - xCenter).pow(2) + (y - yCenter).pow(2) + (z - zCenter).pow(2)
-                    //println("distanceSquared: $distanceSquared, x: $x, y: $y, z: $z for xCenter: $xCenter, yCenter: $yCenter, zCenter: $zCenter")
                     if (distanceSquared <= leafRadius * leafRadius) {
-                        limitedRegion.setBlockData(x, y, z, Material.OAK_LEAVES.createBlockData())
+                        if (limitedRegion.getBlockData(x, y, z) == air) {
+                            limitedRegion.setBlockData(x, y, z, leaves)
+                        }
                     }
                 }
             }
@@ -163,8 +188,13 @@ class TreeGen(
             .multiply(newLength)
 
         val rotatedBStep1 = rotateVectorDebug(unitDirection.clone(), axis1, -branchAngleA)
-        val newDirectionBUnscaled = rotateVectorDebug(rotatedBStep1, axis2, branchAngleB)
+        val newDirectionBUnscaled = rotateVectorDebug(rotatedBStep1, axis2, -branchAngleB)
             .multiply(newLength)
+
+        if (iterationDepth >= maxDepth - 1) {
+            previousDirectionA = newDirectionAUnscaled
+            previousDirectionB = newDirectionBUnscaled
+        }
 
         generateFractalTree(newPos, newDirectionAUnscaled, limitedRegion, random, iterationDepth + 1)
         generateFractalTree(newPos, newDirectionBUnscaled, limitedRegion, random, iterationDepth + 1)
