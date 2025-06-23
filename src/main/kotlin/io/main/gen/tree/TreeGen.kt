@@ -65,7 +65,7 @@ class TreeGen(
                     3 + (random.nextDouble() - 0.5) * 0.1, // Small random X offset
                     6.0,                               // Main Y direction
                     1 +(random.nextDouble() - 0.5) * 0.1   // Small random Z offset
-                ).normalize().multiply(6.0), limitedRegion, random, 1, 5)
+                ).normalize().multiply(6.0), limitedRegion, random, 1, 2.0)
             }
         } else {
             return
@@ -92,7 +92,7 @@ class TreeGen(
         unitDirection: Vector,
         limitedRegion: LimitedRegion,
         iterationDepth: Int,
-        thickness: Int
+        thickness: Double
     ) {
         val newPos = basePos.clone().add(direction)
         val newLength = direction.length() * scale
@@ -114,8 +114,8 @@ class TreeGen(
         }
 
         val axis2 = unitDirection.clone().crossProduct(axis1).normalize()
-        val branchAngleA = Math.toRadians(30.0) + (random.nextDouble() - 0.1)
-        val branchAngleB = Math.toRadians(30.0) + (random.nextDouble() - 0.1)
+        val branchAngleA = Math.toRadians(60.0) + (random.nextDouble() - 0.1)
+        val branchAngleB = Math.toRadians(60.0) + (random.nextDouble() - 0.1)
 
         val rotatedAStep1 = rotateVectorDebug(unitDirection.clone(), axis1, branchAngleA)
         val newDirectionAUnscaled = rotateVectorDebug(rotatedAStep1, axis2, branchAngleB)
@@ -130,7 +130,7 @@ class TreeGen(
             previousDirectionB = newDirectionBUnscaled
         }
 
-        val newThickness = (thickness - (iterationDepth * 0.7)).toInt()
+        val newThickness = thickness - (iterationDepth * 0.7)
 
         generateFractalTree(newPos, newDirectionAUnscaled, limitedRegion, random, iterationDepth + 1, newThickness)
         generateFractalTree(newPos, newDirectionBUnscaled, limitedRegion, random, iterationDepth + 1, newThickness)
@@ -142,7 +142,7 @@ class TreeGen(
         limitedRegion: LimitedRegion,
         random: Random,
         iterationDepth: Int,
-        thickness: Int
+        thickness: Double
     ) {
         val oak = Material.OAK_LOG.createBlockData() as Orientable
         oak.axis = Axis.Y
@@ -164,7 +164,7 @@ class TreeGen(
         } else {
             for (i in 0..direction.length().toInt()) {
                 val step = basePos.clone().add(unitDirection.clone().multiply(i))
-                handleSphereChecking(thickness, step) { x, y, z ->
+                handleSphereChecking(thickness.toInt(), step) { x, y, z ->
                     if (limitedRegion.getBlockData(x, y, z) == air) {
                         limitedRegion.setBlockData(x, y, z, oak)
                     }
