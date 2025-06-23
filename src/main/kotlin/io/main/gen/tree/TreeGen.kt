@@ -19,11 +19,10 @@ class TreeGen(
     val worldGen: WorldGen
 ): BlockPopulator() {
 
-    private val maxDepth = 5
+    private val maxDepth = 4
     private val scale = 0.8562
     private val epsilon = 1e-6
     private val leafRadius = 3
-    private val air = Material.AIR.createBlockData()
     private val leaves = Material.OAK_LEAVES.createBlockData()
     private lateinit var previousDirectionA: Vector
     private lateinit var previousDirectionB: Vector
@@ -63,9 +62,9 @@ class TreeGen(
                 if (worldY == -0x8) return
                 generateFractalTree(Vector(worldX, worldY, worldZ), Vector(
                     3 + (random.nextDouble() - 0.5) * 0.1, // Small random X offset
-                    6.0,                               // Main Y direction
+                    8.0,                               // Main Y direction
                     1 +(random.nextDouble() - 0.5) * 0.1   // Small random Z offset
-                ).normalize().multiply(6.0), limitedRegion, random, 1, 2.0)
+                ).normalize().multiply(6.0), limitedRegion, random, 0, 2.0)
             }
         } else {
             return
@@ -91,8 +90,7 @@ class TreeGen(
         random: Random,
         unitDirection: Vector,
         limitedRegion: LimitedRegion,
-        iterationDepth: Int,
-        thickness: Double
+        iterationDepth: Int
     ) {
         val newPos = basePos.clone().add(direction)
         val newLength = direction.length() * scale
@@ -130,10 +128,8 @@ class TreeGen(
             previousDirectionB = newDirectionBUnscaled
         }
 
-        val newThickness = thickness - (iterationDepth * 0.7)
-
-        generateFractalTree(newPos, newDirectionAUnscaled, limitedRegion, random, iterationDepth + 1, newThickness)
-        generateFractalTree(newPos, newDirectionBUnscaled, limitedRegion, random, iterationDepth + 1, newThickness)
+        generateFractalTree(newPos, newDirectionAUnscaled, limitedRegion, random, iterationDepth + 1)
+        generateFractalTree(newPos, newDirectionBUnscaled, limitedRegion, random, iterationDepth + 1)
     }
 
     private fun generateFractalTree(
@@ -142,17 +138,13 @@ class TreeGen(
         limitedRegion: LimitedRegion,
         random: Random,
         iterationDepth: Int,
-        thickness: Double
+        thickness: Double = 2.0
     ) {
         val oak = Material.OAK_LOG.createBlockData() as Orientable
         oak.axis = Axis.Y
-
-        if (handleNaN(direction)) {
-            return
-        }
-
         val unitDirection = direction.clone().normalize()
-        if (unitDirection.lengthSquared() < epsilon * epsilon) {
+
+        if (handleNaN(direction) || unitDirection.lengthSquared() < epsilon * epsilon) {
             return
         }
 
@@ -164,14 +156,25 @@ class TreeGen(
         } else {
             for (i in 0..direction.length().toInt()) {
                 val step = basePos.clone().add(unitDirection.clone().multiply(i))
-                handleSphereChecking(thickness.toInt(), step) { x, y, z ->
-                    if (limitedRegion.getBlockData(x, y, z) == air) {
-                        limitedRegion.setBlockData(x, y, z, oak)
+
+                val x = step.x.toInt()
+                val y = step.y.toInt()
+                val z = step.z.toInt()
+
+                if (iterationDepth == 0) {
+                    when (i) {
+                        0 -> handleBlockSphere((thickness + random.nextInt(1, 2)).toInt(), basePos, limitedRegion, oak)
+                        1 -> handleBlockSphere(thickness.toInt(), basePos, limitedRegion, oak)
+                        else -> {
+                            if (limitedRegion.getBlockData(x, y, z) == air) {
+                                limitedRegion.setBlockData(x, y, z, oak)
+                            }
+                        }
                     }
                 }
             }
 
-            handleMath(basePos, direction, random, unitDirection, limitedRegion, iterationDepth, thickness)
+            handleMath(basePos, direction, random, unitDirection, limitedRegion, iterationDepth)
         }
     }
 
@@ -190,13 +193,10 @@ class TreeGen(
 
             placeLeaves(limitedRegion, Vector(x, y, z))
         }
+        //placeLeaves(limitedRegion, basePos)
     }
 
     private fun placeLeaves(limitedRegion: LimitedRegion, basePos: Vector) {
-        handleSphereChecking(leafRadius, basePos) { x, y, z ->
-            if (limitedRegion.getBlockData(x, y, z) == air) {
-                limitedRegion.setBlockData(x, y, z, leaves)
-            }
-        }
+        handleBlockSphere(leafRadius, basePos, limitedRegion, leaves)
     }
 }
