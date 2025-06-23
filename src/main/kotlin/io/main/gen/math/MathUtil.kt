@@ -1,9 +1,6 @@
 package io.main.gen.math
 
-import org.bukkit.generator.LimitedRegion
 import org.bukkit.util.Vector
-import java.util.Random
-import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
