@@ -1,6 +1,9 @@
 package io.main.gen.tree
 
 import io.main.gen.WorldGen
+import io.main.gen.math.handleNaN
+import io.main.gen.math.handleSphereChecking
+import io.main.gen.math.rotateVectorDebug
 import org.bukkit.Axis
 import org.bukkit.Material
 import org.bukkit.block.data.Orientable
@@ -58,13 +61,13 @@ class TreeGen(
         val cellZ = floor((worldZ.toDouble() / worldGen.cellSize)).toLong()
 
         if (worldGen.islandInCell.contains(cellX to cellZ)) {
-            if (random.nextInt(500) == 1) {
+            if (random.nextInt(1000) == 1) {
                 val worldY = handleGettingFreeBlock(worldInfo, worldX, worldZ, limitedRegion)
                 if (worldY == -0x8) return
                 generateFractalTree(Vector(worldX, worldY, worldZ), Vector(
-                    (random.nextDouble() - 0.5) * 0.1, // Small random X offset
+                    3 + (random.nextDouble() - 0.5) * 0.1, // Small random X offset
                     6.0,                               // Main Y direction
-                    (random.nextDouble() - 0.5) * 0.1   // Small random Z offset
+                    1 +(random.nextDouble() - 0.5) * 0.1   // Small random Z offset
                 ).normalize().multiply(6.0), limitedRegion, random, 0)
             }
         } else {
@@ -83,80 +86,6 @@ class TreeGen(
             }
         }
         return -0x8
-    }
-
-    private fun generateFractalTree(basePos: Vector, direction: Vector, limitedRegion: LimitedRegion, random: Random, iterationDepth: Int) {
-        val oak = Material.OAK_LOG.createBlockData() as Orientable
-        oak.axis = Axis.Y
-
-        if (handleNaN(direction)) {
-            return
-        }
-
-        val unitDirection = direction.clone().normalize()
-        if (unitDirection.lengthSquared() < epsilon * epsilon) {
-            return
-        }
-
-        if (direction.length() < 1 || iterationDepth >= maxDepth) {
-            handleLeaves(basePos, limitedRegion, previousDirectionA, random)
-            handleLeaves(basePos, limitedRegion, previousDirectionB, random)
-
-            return
-        } else {
-            for (i in 0..direction.length().toInt()) {
-                val step = basePos.clone().add(unitDirection.clone().multiply(i))
-                val x = step.x.toInt()
-                val y = step.y.toInt()
-                val z = step.z.toInt()
-
-                limitedRegion.setBlockData(x, y, z, oak)
-            }
-
-            handleMath(basePos, direction, random, unitDirection, limitedRegion, iterationDepth)
-        }
-    }
-
-    private fun handleLeaves(
-        basePos: Vector,
-        limitedRegion: LimitedRegion,
-        direction: Vector,
-        random: Random
-    ) {
-        val unitDirection = direction.normalize()
-        for (i in 0..direction.length().toInt() - random.nextInt(2, 4)) {
-            val step = basePos.clone().add(unitDirection.clone().multiply(i))
-            val x = step.x.toInt()
-            val y = step.y.toInt()
-            val z = step.z.toInt()
-
-            placeLeaves(limitedRegion, Vector(x, y, z))
-        }
-
-        //placeLeaves(limitedRegion, basePos)
-    }
-
-    private fun placeLeaves(limitedRegion: LimitedRegion, basePos: Vector) {
-        val xCenter = basePos.x
-        val yCenter = basePos.y
-        val zCenter = basePos.z
-
-        for (x in (xCenter - leafRadius).toInt()..(xCenter + leafRadius).toInt()) {
-            for (y in (yCenter - leafRadius).toInt()..(yCenter + leafRadius).toInt()) {
-                for (z in (zCenter - leafRadius).toInt()..(zCenter + leafRadius).toInt()) {
-                    val distanceSquared = (x - xCenter).pow(2) + (y - yCenter).pow(2) + (z - zCenter).pow(2)
-                    if (distanceSquared <= leafRadius * leafRadius) {
-                        if (limitedRegion.getBlockData(x, y, z) == air) {
-                            limitedRegion.setBlockData(x, y, z, leaves)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun handleNaN(direction: Vector): Boolean {
-        return direction.x.isNaN() || direction.y.isNaN() || direction.z.isNaN() || direction.lengthSquared() < epsilon * epsilon
     }
 
     private fun handleMath(basePos: Vector, direction: Vector, random: Random, unitDirection: Vector, limitedRegion: LimitedRegion, iterationDepth: Int) {
@@ -200,23 +129,60 @@ class TreeGen(
         generateFractalTree(newPos, newDirectionBUnscaled, limitedRegion, random, iterationDepth + 1)
     }
 
-    private fun rotateVectorDebug(vec: Vector, axis: Vector, angle: Double): Vector {
-        val x = vec.getX()
-        val y = vec.getY()
-        val z = vec.getZ()
-        val x2 = axis.getX()
-        val y2 = axis.getY()
-        val z2 = axis.getZ()
+    private fun generateFractalTree(basePos: Vector, direction: Vector, limitedRegion: LimitedRegion, random: Random, iterationDepth: Int) {
+        val oak = Material.OAK_LOG.createBlockData() as Orientable
+        oak.axis = Axis.Y
 
-        val cosTheta = cos(angle)
-        val sinTheta = sin(angle)
-        val dotProduct = vec.dot(axis)
+        if (handleNaN(direction)) {
+            return
+        }
 
-        val xPrime = x2 * dotProduct * (1.0 - cosTheta) + x * cosTheta + (-z2 * y + y2 * z) * sinTheta
-        val yPrime = y2 * dotProduct * (1.0 - cosTheta) + y * cosTheta + (z2 * x - x2 * z) * sinTheta
-        val zPrime = z2 * dotProduct * (1.0 - cosTheta) + z * cosTheta + (-y2 * x + x2 * y) * sinTheta
+        val unitDirection = direction.clone().normalize()
+        if (unitDirection.lengthSquared() < epsilon * epsilon) {
+            return
+        }
 
-        val result = Vector(xPrime, yPrime, zPrime)
-        return result
+        if (direction.length() < 1 || iterationDepth >= maxDepth) {
+            handleLeaves(basePos, limitedRegion, previousDirectionA, random)
+            handleLeaves(basePos, limitedRegion, previousDirectionB, random)
+
+            return
+        } else {
+            for (i in 0..direction.length().toInt()) {
+                val step = basePos.clone().add(unitDirection.clone().multiply(i))
+                val x = step.x.toInt()
+                val y = step.y.toInt()
+                val z = step.z.toInt()
+
+                limitedRegion.setBlockData(x, y, z, oak)
+            }
+
+            handleMath(basePos, direction, random, unitDirection, limitedRegion, iterationDepth)
+        }
+    }
+
+    private fun handleLeaves(
+        basePos: Vector,
+        limitedRegion: LimitedRegion,
+        direction: Vector,
+        random: Random
+    ) {
+        val unitDirection = direction.normalize()
+        for (i in 0..direction.length().toInt() - random.nextInt(0, 2)) {
+            val step = basePos.clone().add(unitDirection.clone().multiply(i))
+            val x = step.x.toInt()
+            val y = step.y.toInt()
+            val z = step.z.toInt()
+
+            placeLeaves(limitedRegion, Vector(x, y, z))
+        }
+    }
+
+    private fun placeLeaves(limitedRegion: LimitedRegion, basePos: Vector) {
+        handleSphereChecking(leafRadius, basePos) { x, y, z ->
+            if (limitedRegion.getBlockData(x, y, z) == air) {
+                limitedRegion.setBlockData(x, y, z, leaves)
+            }
+        }
     }
 }
