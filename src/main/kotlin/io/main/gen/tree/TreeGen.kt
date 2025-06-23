@@ -13,16 +13,13 @@ import org.bukkit.generator.WorldInfo
 import org.bukkit.util.Vector
 import java.util.*
 import kotlin.math.abs
-import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.pow
-import kotlin.math.sin
 
 class TreeGen(
     val worldGen: WorldGen
 ): BlockPopulator() {
 
-    private val maxDepth = 4
+    private val maxDepth = 5
     private val scale = 0.8562
     private val epsilon = 1e-6
     private val leafRadius = 3
@@ -68,7 +65,7 @@ class TreeGen(
                     3 + (random.nextDouble() - 0.5) * 0.1, // Small random X offset
                     6.0,                               // Main Y direction
                     1 +(random.nextDouble() - 0.5) * 0.1   // Small random Z offset
-                ).normalize().multiply(6.0), limitedRegion, random, 0)
+                ).normalize().multiply(6.0), limitedRegion, random, 1, 5)
             }
         } else {
             return
@@ -88,7 +85,15 @@ class TreeGen(
         return -0x8
     }
 
-    private fun handleMath(basePos: Vector, direction: Vector, random: Random, unitDirection: Vector, limitedRegion: LimitedRegion, iterationDepth: Int) {
+    private fun handleMath(
+        basePos: Vector,
+        direction: Vector,
+        random: Random,
+        unitDirection: Vector,
+        limitedRegion: LimitedRegion,
+        iterationDepth: Int,
+        thickness: Int
+    ) {
         val newPos = basePos.clone().add(direction)
         val newLength = direction.length() * scale
 
@@ -125,11 +130,20 @@ class TreeGen(
             previousDirectionB = newDirectionBUnscaled
         }
 
-        generateFractalTree(newPos, newDirectionAUnscaled, limitedRegion, random, iterationDepth + 1)
-        generateFractalTree(newPos, newDirectionBUnscaled, limitedRegion, random, iterationDepth + 1)
+        val newThickness = (thickness - (iterationDepth * 0.7)).toInt()
+
+        generateFractalTree(newPos, newDirectionAUnscaled, limitedRegion, random, iterationDepth + 1, newThickness)
+        generateFractalTree(newPos, newDirectionBUnscaled, limitedRegion, random, iterationDepth + 1, newThickness)
     }
 
-    private fun generateFractalTree(basePos: Vector, direction: Vector, limitedRegion: LimitedRegion, random: Random, iterationDepth: Int) {
+    private fun generateFractalTree(
+        basePos: Vector,
+        direction: Vector,
+        limitedRegion: LimitedRegion,
+        random: Random,
+        iterationDepth: Int,
+        thickness: Int
+    ) {
         val oak = Material.OAK_LOG.createBlockData() as Orientable
         oak.axis = Axis.Y
 
@@ -150,14 +164,14 @@ class TreeGen(
         } else {
             for (i in 0..direction.length().toInt()) {
                 val step = basePos.clone().add(unitDirection.clone().multiply(i))
-                val x = step.x.toInt()
-                val y = step.y.toInt()
-                val z = step.z.toInt()
-
-                limitedRegion.setBlockData(x, y, z, oak)
+                handleSphereChecking(thickness, step) { x, y, z ->
+                    if (limitedRegion.getBlockData(x, y, z) == air) {
+                        limitedRegion.setBlockData(x, y, z, oak)
+                    }
+                }
             }
 
-            handleMath(basePos, direction, random, unitDirection, limitedRegion, iterationDepth)
+            handleMath(basePos, direction, random, unitDirection, limitedRegion, iterationDepth, thickness)
         }
     }
 
