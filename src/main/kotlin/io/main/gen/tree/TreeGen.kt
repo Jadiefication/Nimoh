@@ -4,6 +4,7 @@ import io.main.gen.WorldGen
 import io.main.gen.math.handleNaN
 import io.main.gen.math.handleSphereChecking
 import io.main.gen.math.rotateVectorDebug
+import io.main.world.handleGettingFreeBlock
 import org.bukkit.Axis
 import org.bukkit.Material
 import org.bukkit.block.data.Orientable
@@ -71,19 +72,6 @@ class TreeGen(
         }
     }
 
-    private fun handleGettingFreeBlock(worldInfo: WorldInfo, x: Int, z: Int, limitedRegion: LimitedRegion): Int {
-        val freeBlock = worldInfo.maxHeight - 1
-        for (y in freeBlock downTo 2) {
-            if (limitedRegion.getBlockData(x, y, z).material == Material.AIR && (
-                        limitedRegion.getBlockData(x, y - 1, z).material == Material.GRASS_BLOCK || limitedRegion.getBlockData(x, y - 1, z).material == Material.DIRT)) {
-                return y
-            } else {
-                continue
-            }
-        }
-        return -0x8
-    }
-
     private fun handleMath(
         basePos: Vector,
         direction: Vector,
@@ -149,8 +137,8 @@ class TreeGen(
         }
 
         if (direction.length() < 1 || iterationDepth >= maxDepth) {
-            handleLeaves(basePos, limitedRegion, previousDirectionA, random)
-            handleLeaves(basePos, limitedRegion, previousDirectionB, random)
+            handleLeaves(basePos, limitedRegion)
+            handleLeaves(basePos, limitedRegion)
 
             return
         } else {
@@ -163,13 +151,18 @@ class TreeGen(
 
                 if (iterationDepth == 0) {
                     when (i) {
-                        0 -> handleBlockSphere((thickness + random.nextInt(1, 2)).toInt(), basePos, limitedRegion, oak)
+                        0 -> handleBlockSphere((thickness + random.nextInt(0, 1)).toInt(), basePos, limitedRegion, oak)
                         1 -> handleBlockSphere(thickness.toInt(), basePos, limitedRegion, oak)
+                        2 -> handleBlockSphere(thickness.toInt() - 1, basePos, limitedRegion, oak)
                         else -> {
                             if (limitedRegion.getBlockData(x, y, z) == air) {
                                 limitedRegion.setBlockData(x, y, z, oak)
                             }
                         }
+                    }
+                } else {
+                    if (limitedRegion.getBlockData(x, y, z) == air) {
+                        limitedRegion.setBlockData(x, y, z, oak)
                     }
                 }
             }
@@ -180,20 +173,9 @@ class TreeGen(
 
     private fun handleLeaves(
         basePos: Vector,
-        limitedRegion: LimitedRegion,
-        direction: Vector,
-        random: Random
+        limitedRegion: LimitedRegion
     ) {
-        val unitDirection = direction.normalize()
-        for (i in 0..direction.length().toInt() - random.nextInt(0, 2)) {
-            val step = basePos.clone().add(unitDirection.clone().multiply(i))
-            val x = step.x.toInt()
-            val y = step.y.toInt()
-            val z = step.z.toInt()
-
-            placeLeaves(limitedRegion, Vector(x, y, z))
-        }
-        //placeLeaves(limitedRegion, basePos)
+        placeLeaves(limitedRegion, basePos)
     }
 
     private fun placeLeaves(limitedRegion: LimitedRegion, basePos: Vector) {
