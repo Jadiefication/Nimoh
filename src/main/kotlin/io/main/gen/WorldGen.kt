@@ -46,18 +46,41 @@ class WorldGen: ChunkGenerator() {
                 val center = islandInCell[(cellX to cellZ)]
 
                 if (center != null) {
-                    val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
+                    /*val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
                     val perlinNoise = pNoise.get(worldX * pScale, 0.0, worldZ * pScale)
                     val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
                     val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
                     val height = sHeight * 0.7 + pHeight * 0.3
                     val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ, center)).toInt()
-                    setBlocks(finalHeight, chunk, x, z)
+                    setBlocks(finalHeight, chunk, x, z)*/
+                    smoothTerrain(x, z, center, chunk)
                 } else {
                     setBlocks(baseSea, chunk, x, z)
                 }
             }
         }
+    }
+
+    private fun smoothTerrain(x: Int, z: Int, center: Pair<Long, Long>, chunk: ChunkData) {
+        val sAverage = (
+                sNoise.get((x - 1) * sScale, 0.0, z * sScale) +
+                        sNoise.get((x + 1) * sScale, 0.0, z * sScale) +
+                        sNoise.get(x * sScale, 0.0, (z - 1) * sScale) +
+                        sNoise.get(x * sScale, 0.0, (z + 1) * sScale) +
+                        sNoise.get(x * sScale, 0.0, z * sScale)
+                ) / 5.0
+        val pAverage = (
+                pNoise.get((x - 1) * pScale, 0.0, z * pScale) +
+                        pNoise.get((x + 1) * pScale, 0.0, z * pScale) +
+                        pNoise.get(x * pScale, 0.0, (z - 1) * pScale) +
+                        pNoise.get(x * pScale, 0.0, (z + 1) * pScale) +
+                        pNoise.get(x * pScale, 0.0, z * pScale)
+                ) / 5.0
+        val sNormal = baseSea + ((sAverage + 1.0) / 2) * terrainAmplitude
+        val pNormal = baseSea + ((pAverage + 1.0) / 2) * terrainAmplitude
+        val average = sNormal * 0.7 + pNormal * 0.3
+        val finalHeight = baseSea + ((average - baseSea) * handleFalloff(x, z, center)).toInt()
+        setBlocks(finalHeight, chunk, x, z)
     }
 
     private fun handleIslandCenter(cellX: Long, cellZ: Long, worldSeed: Long) {
