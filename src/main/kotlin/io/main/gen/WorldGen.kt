@@ -53,34 +53,35 @@ class WorldGen: ChunkGenerator() {
                     val height = sHeight * 0.7 + pHeight * 0.3
                     val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ, center)).toInt()
                     setBlocks(finalHeight, chunk, x, z)*/
-                    smoothTerrain(x, z, center, chunk)
+                    smoothTerrain(worldX, worldZ, center, chunk, random, x, z)
                 } else {
-                    setBlocks(baseSea, chunk, x, z)
+                    setBlocks(baseSea, chunk, x, z, random)
                 }
             }
         }
     }
 
-    private fun smoothTerrain(x: Int, z: Int, center: Pair<Long, Long>, chunk: ChunkData) {
+    private fun smoothTerrain(x: Int, z: Int, center: Pair<Long, Long>, chunk: ChunkData, random: Random, chunkX: Int, chunkZ: Int) {
+
         val sAverage = (
-                sNoise.get((x - 1) * sScale, 0.0, z * sScale) +
-                        sNoise.get((x + 1) * sScale, 0.0, z * sScale) +
-                        sNoise.get(x * sScale, 0.0, (z - 1) * sScale) +
-                        sNoise.get(x * sScale, 0.0, (z + 1) * sScale) +
-                        sNoise.get(x * sScale, 0.0, z * sScale)
+                sNoise.get((x - 1) * sScale, 0.0, z * sScale).normalize() +
+                        sNoise.get((x + 1) * sScale, 0.0, z * sScale).normalize() +
+                        sNoise.get(x * sScale, 0.0, (z - 1) * sScale).normalize() +
+                        sNoise.get(x * sScale, 0.0, (z + 1) * sScale).normalize() +
+                        sNoise.get(x * sScale, 0.0, z * sScale).normalize()
                 ) / 5.0
         val pAverage = (
-                pNoise.get((x - 1) * pScale, 0.0, z * pScale) +
-                        pNoise.get((x + 1) * pScale, 0.0, z * pScale) +
-                        pNoise.get(x * pScale, 0.0, (z - 1) * pScale) +
-                        pNoise.get(x * pScale, 0.0, (z + 1) * pScale) +
-                        pNoise.get(x * pScale, 0.0, z * pScale)
+                pNoise.get((x - 1) * pScale, 0.0, z * pScale).normalize() +
+                        pNoise.get((x + 1) * pScale, 0.0, z * pScale).normalize() +
+                        pNoise.get(x * pScale, 0.0, (z - 1) * pScale).normalize() +
+                        pNoise.get(x * pScale, 0.0, (z + 1) * pScale).normalize() +
+                        pNoise.get(x * pScale, 0.0, z * pScale).normalize()
                 ) / 5.0
-        val sNormal = baseSea + ((sAverage + 1.0) / 2) * terrainAmplitude
-        val pNormal = baseSea + ((pAverage + 1.0) / 2) * terrainAmplitude
+        val sNormal = baseSea + sAverage.normalize() * terrainAmplitude
+        val pNormal = baseSea + pAverage.normalize() * terrainAmplitude
         val average = sNormal * 0.7 + pNormal * 0.3
         val finalHeight = baseSea + ((average - baseSea) * handleFalloff(x, z, center)).toInt()
-        setBlocks(finalHeight, chunk, x, z)
+        setBlocks(finalHeight, chunk, chunkX, chunkZ, random)
     }
 
     private fun handleIslandCenter(cellX: Long, cellZ: Long, worldSeed: Long) {
@@ -116,7 +117,7 @@ class WorldGen: ChunkGenerator() {
         return falloffValue
     }
 
-    private fun setBlocks(height: Int, chunk: ChunkData, x: Int, z: Int) {
+    private fun setBlocks(height: Int, chunk: ChunkData, x: Int, z: Int, random: Random) {
         for (y in 0..height) {
             if (y == 0) {
                 chunk.setBlock(x, y, z, Material.BEDROCK)
@@ -127,7 +128,7 @@ class WorldGen: ChunkGenerator() {
             } else if (y < height) {
                 chunk.setBlock(x, y, z, Material.DIRT) // Top layers dirt
             } else { // y == height
-                handleShore(y, chunk, x, z)
+                handleShore(y, chunk, x, z, random)
             }
         }
 
@@ -141,20 +142,20 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
-    private fun handleShore(y: Int, chunk: ChunkData, x: Int, z: Int) {
+    private fun handleShore(y: Int, chunk: ChunkData, x: Int, z: Int, random: Random) {
         if (63 <= y && y <= 65) {
-            chance(chunk, x, y, z)
+            chance(chunk, x, y, z, random)
 
         } else {
             when (y) {
                 66 -> {
-                    chance(chunk, x, y, z, 3)
+                    chance(chunk, x, y, z, 3, random)
                 }
                 67 -> {
-                    chance(chunk, x, y, z, 4)
+                    chance(chunk, x, y, z, 4, random)
                 }
                 68 -> {
-                    chance(chunk, x, y, z, 5)
+                    chance(chunk, x, y, z, 5, random)
                 }
                 else -> {
                     chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
@@ -163,18 +164,22 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
-    private fun chance(chunk: ChunkData, x: Int, y: Int, z: Int) {
-        if (Random().nextInt() % 2 == 0) {
+    private fun chance(chunk: ChunkData, x: Int, y: Int, z: Int, random: Random) {
+        if (random.nextInt() % 2 == 0) {
             chunk.setBlock(x, y, z, Material.SAND)
         } else {
             chunk.setBlock(x, y, z, Material.GRAVEL)
         }
     }
-    private fun chance(chunk: ChunkData, x: Int, y: Int, z: Int, probability: Int) {
-        if (Random().nextInt() % probability == 0) {
-            chance(chunk, x, y, z)
+    private fun chance(chunk: ChunkData, x: Int, y: Int, z: Int, probability: Int, random: Random) {
+        if (random.nextInt() % probability == 0) {
+            chance(chunk, x, y, z, random)
         } else {
             chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
         }
     }
+}
+
+fun Double.normalize(): Double {
+    return (this + 1.0) / 2
 }
