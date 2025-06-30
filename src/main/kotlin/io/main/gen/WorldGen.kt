@@ -160,6 +160,6 @@ class WorldGen: ChunkGenerator() {
     }
 
     override fun getDefaultPopulators(world: World): List<BlockPopulator?> {
-        return listOf(TreeGen(this), BushGen(this))
+        return listOf(TreeGen(this), BushGen(this), GrassGen(this))
     }
 }
