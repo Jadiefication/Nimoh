@@ -52,7 +52,11 @@ class CellCommand(
                 )
         }
 
-        private fun handleTpToCell(cellX: Long, cellZ: Long, sender: CommandSender) {
+        private fun handleTpToCell(
+            cellX: Long,
+            cellZ: Long,
+            sender: CommandSender
+        ) {
             if (sender !is Player) {
                 sender.sendMessage {
                     Component.text("Only players may use this command")

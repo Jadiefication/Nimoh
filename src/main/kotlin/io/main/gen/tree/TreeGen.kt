@@ -24,9 +24,12 @@ class TreeGen(
     private val scale = 0.8562
     private val epsilon = 1e-6
     private val leafRadius = 3
-    private val leaves = Material.OAK_LEAVES.createBlockData()
     private lateinit var previousDirectionA: Vector
     private lateinit var previousDirectionB: Vector
+    private val sLeaves = Material.SPRUCE_LEAVES.createBlockData()
+    private val oLeaves = Material.OAK_LEAVES.createBlockData()
+    private val aLeaves = Material.AZALEA_LEAVES.createBlockData()
+    private val dLeaves = Material.DARK_OAK_LEAVES.createBlockData()
 
     override fun populate(
         worldInfo: WorldInfo,
@@ -137,9 +140,7 @@ class TreeGen(
         }
 
         if (direction.length() < 1 || iterationDepth >= maxDepth) {
-            handleLeaves(basePos, limitedRegion)
-            handleLeaves(basePos, limitedRegion)
-
+            decideLeaves(basePos, limitedRegion, random)
             return
         } else {
             for (i in 0..direction.length().toInt()) {
@@ -171,14 +172,24 @@ class TreeGen(
         }
     }
 
-    private fun handleLeaves(
+    private fun decideLeaves(
         basePos: Vector,
-        limitedRegion: LimitedRegion
+        limitedRegion: LimitedRegion,
+        random: Random
     ) {
-        placeLeaves(limitedRegion, basePos)
-    }
-
-    private fun placeLeaves(limitedRegion: LimitedRegion, basePos: Vector) {
-        handleBlockSphere(leafRadius, basePos, limitedRegion, leaves)
+        val leaf1 = when (random.nextInt(0, 2)) {
+            0 -> sLeaves
+            1 -> oLeaves
+            2 -> aLeaves
+            else -> dLeaves
+        }
+        val leaf2 = when (random.nextInt(0, 2)) {
+            0 -> sLeaves
+            1 -> oLeaves
+            2 -> aLeaves
+            else -> dLeaves
+        }
+        handleBlockSphere(leafRadius, basePos, limitedRegion, leaf1)
+        handleBlockSphere(leafRadius, basePos, limitedRegion, leaf2)
     }
 }
