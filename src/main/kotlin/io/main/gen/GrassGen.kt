@@ -15,6 +15,8 @@ class GrassGen(
 
     private val longGrass = Material.TALL_GRASS.createBlockData()
     private val shortGrass = Material.SHORT_GRASS.createBlockData()
+    private var declared = false
+    private lateinit var newRandom: Random
 
     override fun populate(
         worldInfo: WorldInfo,
@@ -23,6 +25,10 @@ class GrassGen(
         chunkZ: Int,
         limitedRegion: LimitedRegion
     ) {
+        if (!declared) {
+            newRandom = Random(random.nextLong() * 2)
+            declared = true
+        }
         for (x in 0..16) {
             for (z in 0..16) {
                 handleChance(x, z, random, limitedRegion, worldInfo, chunkX, chunkZ)
