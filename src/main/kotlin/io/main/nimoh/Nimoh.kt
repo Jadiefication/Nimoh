@@ -6,8 +6,10 @@ import org.bukkit.plugin.java.JavaPlugin
 
 class Nimoh : JavaPlugin() {
 
-    private val values = listOf("baseSea", "terrainAmplitude",
-        "sScale", "pScale", "landRadius", "falloffRadius", "cellSize")
+    private val values = listOf(
+        "baseSea", "terrainAmplitude",
+        "sScale", "pScale", "landRadius", "falloffRadius", "cellSize"
+    )
     private val worldGen = WorldGen()
 
     override fun onEnable() {
