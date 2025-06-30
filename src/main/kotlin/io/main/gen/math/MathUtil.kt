@@ -6,7 +6,11 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 const val epsilon = 1e-6
-fun handleSphereChecking(radius: Int, basePos: Vector, function: (Int, Int, Int) -> Unit) {
+fun handleSphereChecking(
+    radius: Int,
+    basePos: Vector,
+    function: (Int, Int, Int) -> Unit
+) {
     val xCenter = basePos.x
     val yCenter = basePos.y
     val zCenter = basePos.z
@@ -23,11 +27,17 @@ fun handleSphereChecking(radius: Int, basePos: Vector, function: (Int, Int, Int)
     }
 }
 
-fun handleNaN(direction: Vector): Boolean {
+fun handleNaN(
+    direction: Vector
+): Boolean {
     return direction.x.isNaN() || direction.y.isNaN() || direction.z.isNaN() || direction.lengthSquared() < epsilon * epsilon
 }
 
-fun rotateVectorDebug(vec: Vector, axis: Vector, angle: Double): Vector {
+fun rotateVectorDebug(
+    vec: Vector,
+    axis: Vector,
+    angle: Double
+): Vector {
     val x = vec.getX()
     val y = vec.getY()
     val z = vec.getZ()

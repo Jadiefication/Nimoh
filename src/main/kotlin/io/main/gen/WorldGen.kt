@@ -30,7 +30,13 @@ class WorldGen: ChunkGenerator() {
     internal val islandInCell = mutableMapOf<Pair<Long, Long>, Pair<Long, Long>>()
     private var seedsSet = false
 
-    override fun generateNoise(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int, chunk: ChunkData) {
+    override fun generateNoise(
+        worldInfo: WorldInfo,
+        random: Random,
+        chunkX: Int,
+        chunkZ: Int,
+        chunk: ChunkData
+    ) {
         if (!seedsSet) {
             val seed = random.nextInt()
             sNoise.setSeed(seed)
@@ -64,7 +70,11 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
-    private fun handleIslandCenter(cellX: Long, cellZ: Long, worldSeed: Long) {
+    private fun handleIslandCenter(
+        cellX: Long,
+        cellZ: Long,
+        worldSeed: Long
+    ) {
         if (!islandInCell.contains(cellX to cellZ)) {
             val centerX = cellX * cellSize + cellSize / 2
             val centerZ = cellZ * cellSize + cellSize / 2
@@ -78,7 +88,11 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
-    private fun handleFalloff(x: Int, z: Int, center: Pair<Long, Long>): Double {
+    private fun handleFalloff(
+        x: Int,
+        z: Int,
+        center: Pair<Long, Long>
+    ): Double {
         val dx = x - center.first
         val dz = z - center.second
         distance = sqrt(dx.toDouble().pow(2) + dz.toDouble().pow(2))
@@ -97,7 +111,12 @@ class WorldGen: ChunkGenerator() {
         return falloffValue
     }
 
-    private fun setBlocks(height: Int, chunk: ChunkData, x: Int, z: Int) {
+    private fun setBlocks(
+        height: Int,
+        chunk: ChunkData,
+        x: Int,
+        z: Int
+    ) {
         for (y in 0..height) {
             if (y == 0) {
                 chunk.setBlock(x, y, z, Material.BEDROCK)
@@ -122,7 +141,12 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
-    private fun handleShore(y: Int, chunk: ChunkData, x: Int, z: Int) {
+    private fun handleShore(
+        y: Int,
+        chunk: ChunkData,
+        x: Int,
+        z: Int
+    ) {
         if (63 <= y && y <= 65) {
             chance(chunk, x, y, z)
 
@@ -144,14 +168,25 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
-    private fun chance(chunk: ChunkData, x: Int, y: Int, z: Int) {
+    private fun chance(
+        chunk: ChunkData,
+        x: Int,
+        y: Int,
+        z: Int
+    ) {
         if (Random().nextInt() % 2 == 0) {
             chunk.setBlock(x, y, z, Material.SAND)
         } else {
             chunk.setBlock(x, y, z, Material.GRAVEL)
         }
     }
-    private fun chance(chunk: ChunkData, x: Int, y: Int, z: Int, probability: Int) {
+    private fun chance(
+        chunk: ChunkData,
+        x: Int,
+        y: Int,
+        z: Int,
+        probability: Int
+    ) {
         if (Random().nextInt() % probability == 0) {
             chance(chunk, x, y, z)
         } else {
@@ -159,7 +194,9 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
-    override fun getDefaultPopulators(world: World): List<BlockPopulator?> {
+    override fun getDefaultPopulators(
+        world: World
+    ): List<BlockPopulator?> {
         return listOf(TreeGen(this), BushGen(this), GrassGen(this))
     }
 }
