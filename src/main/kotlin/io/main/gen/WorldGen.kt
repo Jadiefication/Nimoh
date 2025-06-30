@@ -11,7 +11,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 
-class WorldGen: ChunkGenerator() {
+class WorldGen : ChunkGenerator() {
 
     var baseSea = 62
     var terrainAmplitude = 40
@@ -46,13 +46,6 @@ class WorldGen: ChunkGenerator() {
                 val center = islandInCell[(cellX to cellZ)]
 
                 if (center != null) {
-                    /*val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
-                    val perlinNoise = pNoise.get(worldX * pScale, 0.0, worldZ * pScale)
-                    val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                    val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                    val height = sHeight * 0.7 + pHeight * 0.3
-                    val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ, center)).toInt()
-                    setBlocks(finalHeight, chunk, x, z)*/
                     smoothTerrain(worldX, worldZ, center, chunk, random, x, z)
                 } else {
                     setBlocks(baseSea, chunk, x, z, random)
@@ -61,7 +54,15 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
-    private fun smoothTerrain(x: Int, z: Int, center: Pair<Long, Long>, chunk: ChunkData, random: Random, chunkX: Int, chunkZ: Int) {
+    private fun smoothTerrain(
+        x: Int,
+        z: Int,
+        center: Pair<Long, Long>,
+        chunk: ChunkData,
+        random: Random,
+        chunkX: Int,
+        chunkZ: Int
+    ) {
 
         val sAverage = (
                 sNoise.get((x - 1) * sScale, 0.0, z * sScale).normalize() +
@@ -121,7 +122,7 @@ class WorldGen: ChunkGenerator() {
         for (y in 0..height) {
             if (y == 0) {
                 chunk.setBlock(x, y, z, Material.BEDROCK)
-            } else if (y < baseSea- 2 && y <= height - 5) { // Deeper stone for lower parts
+            } else if (y < baseSea - 2 && y <= height - 5) { // Deeper stone for lower parts
                 chunk.setBlock(x, y, z, Material.STONE)
             } else if (y < height - 2) {
                 chunk.setBlock(x, y, z, Material.STONE) // Fill lower layers with stone
@@ -151,12 +152,15 @@ class WorldGen: ChunkGenerator() {
                 66 -> {
                     chance(chunk, x, y, z, 3, random)
                 }
+
                 67 -> {
                     chance(chunk, x, y, z, 4, random)
                 }
+
                 68 -> {
                     chance(chunk, x, y, z, 5, random)
                 }
+
                 else -> {
                     chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
                 }
@@ -171,6 +175,7 @@ class WorldGen: ChunkGenerator() {
             chunk.setBlock(x, y, z, Material.GRAVEL)
         }
     }
+
     private fun chance(chunk: ChunkData, x: Int, y: Int, z: Int, probability: Int, random: Random) {
         if (random.nextInt() % probability == 0) {
             chance(chunk, x, y, z, random)
