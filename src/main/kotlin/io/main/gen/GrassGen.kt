@@ -55,7 +55,7 @@ class GrassGen(
             if (random.nextInt(3) == 1) {
                 val worldY = handleGettingFreeBlock(worldInfo, worldX, worldZ, limitedRegion)
                 if (worldY == -0x8) return
-                selectGrass(x, worldY, z, random, limitedRegion)
+                selectGrass(worldX, worldY, worldZ, random, limitedRegion)
             }
         } else {
             return
