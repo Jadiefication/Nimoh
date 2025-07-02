@@ -7,6 +7,7 @@ import io.main.gen.math.rotateVectorDebug
 import io.main.world.handleGettingFreeBlock
 import org.bukkit.Axis
 import org.bukkit.Material
+import org.bukkit.block.data.BlockData
 import org.bukkit.block.data.Orientable
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.LimitedRegion
@@ -34,6 +35,7 @@ class TreeGen(
     private val aLeaves = Material.AZALEA_LEAVES.createBlockData()
     private val dLeaves = Material.DARK_OAK_LEAVES.createBlockData()
     private val oak = Material.OAK_LOG.createBlockData() as Orientable
+    private val notPlacedBlocks = mutableMapOf<Triple<Int, Int, Int>, BlockData>()
 
     init {
         oak.axis = Axis.Y
@@ -46,10 +48,29 @@ class TreeGen(
         chunkZ: Int,
         limitedRegion: LimitedRegion
     ) {
+        if (notPlacedBlocks.isNotEmpty()) {
+            notPlacedBlocks.forEach { (x, y, z), blockData ->
+                attemptPlacement(x, y, z, limitedRegion, blockData)
+            }
+        }
+
         for (x in 0..16) {
             for (z in 0..16) {
                 handleChance(x, z, random, limitedRegion, worldInfo, chunkX, chunkZ)
             }
+        }
+    }
+
+    private fun attemptPlacement(
+        x: Int,
+        y: Int,
+        z: Int,
+        limitedRegion: LimitedRegion,
+        blockData: BlockData
+    ) {
+        if (limitedRegion.isInRegion(x, y, z)) {
+            limitedRegion.setBlockData(x, y, z, blockData)
+            notPlacedBlocks.remove(Triple(x, y, z))
         }
     }
 
@@ -171,7 +192,7 @@ class TreeGen(
                 val step = basePos.clone().add(unitDirection.clone().multiply(i))
 
                 when (i) {
-                    0 -> handleBlockSphere((thickness).toInt(), basePos, limitedRegion, oak)
+                    0 -> handleBlockSphere((thickness).toInt(), basePos, limitedRegion, oak, notPlacedBlocks)
                     else -> {
                         handleCylinder(limitedRegion, unitDirection, step, thickness)
                         /*if (limitedRegion.getBlockData(x, y, z) == air) {
@@ -206,7 +227,11 @@ class TreeGen(
             val blockZ = point.blockZ
 
             if (limitedRegion.getBlockData(blockX, blockY, blockZ) == air) {
-                limitedRegion.setBlockData(blockX, blockY, blockZ, oak)
+                if (!limitedRegion.isInRegion(blockX, blockY, blockZ)) {
+                    notPlacedBlocks.put(Triple(blockX, blockY, blockZ), oak)
+                } else {
+                    limitedRegion.setBlockData(blockX, blockY, blockZ, oak)
+                }
             }
         }
     }
@@ -228,7 +253,11 @@ class TreeGen(
                     2 -> aLeaves
                     else -> dLeaves
                 }
-                limitedRegion.setBlockData(x, y, z, leaf)
+                if (!limitedRegion.isInRegion(x, y, z)) {
+                    notPlacedBlocks.put(Triple(x, y, z), leaf)
+                } else {
+                    limitedRegion.setBlockData(x, y, z, leaf)
+                }
             }
         }
     }

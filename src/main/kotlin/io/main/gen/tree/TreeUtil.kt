@@ -13,11 +13,16 @@ fun handleBlockSphere(
     radius: Int,
     pos: Vector,
     limitedRegion: LimitedRegion,
-    blockData: BlockData
+    blockData: BlockData,
+    notPlacedBlocks: MutableMap<Triple<Int, Int, Int>, BlockData>
 ) {
     handleSphereChecking(radius, pos) { x, y, z ->
         if (limitedRegion.getBlockData(x, y, z) == air) {
-            limitedRegion.setBlockData(x, y, z, blockData)
+            if (!limitedRegion.isInRegion(x, y, z)) {
+                notPlacedBlocks.put(Triple(x, y, z), blockData)
+            } else {
+                limitedRegion.setBlockData(x, y, z, blockData)
+            }
         }
     }
 }

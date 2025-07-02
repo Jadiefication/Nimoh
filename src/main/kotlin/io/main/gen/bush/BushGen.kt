@@ -6,6 +6,7 @@ import io.main.gen.tree.air
 import io.main.gen.tree.handleBlockSphere
 import io.main.world.handleGettingFreeBlock
 import org.bukkit.Material
+import org.bukkit.block.data.BlockData
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.LimitedRegion
 import org.bukkit.generator.WorldInfo
@@ -24,6 +25,7 @@ class BushGen(
     private val dLeaves = Material.DARK_OAK_LEAVES.createBlockData()
     private var declared = false
     private lateinit var newRandom: Random
+    private val notPlacedBlocks = mutableMapOf<Triple<Int, Int, Int>, BlockData>()
 
     override fun populate(
         worldInfo: WorldInfo,
@@ -99,7 +101,7 @@ class BushGen(
                     2 -> aLeaves
                     else -> dLeaves
                 }
-                handleBlockSphere(3, Vector(x, y, z), limitedRegion, leaf)
+                handleBlockSphere(3, Vector(x, y, z), limitedRegion, leaf, notPlacedBlocks)
             }
         }
     }
