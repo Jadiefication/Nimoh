@@ -14,6 +14,7 @@ import org.bukkit.generator.LimitedRegion
 import org.bukkit.generator.WorldInfo
 import org.bukkit.util.Vector
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.floor
@@ -24,10 +25,10 @@ class TreeGen(
     val worldGen: WorldGen
 ): BlockPopulator() {
 
-    private val maxDepth = 4
+    private val maxDepth = 5
     private val scale = 0.8562
     private val epsilon = 1e-6
-    private val leafRadius = 2
+    private val leafRadius = 8
     private lateinit var previousDirectionA: Vector
     private lateinit var previousDirectionB: Vector
     private val sLeaves = Material.SPRUCE_LEAVES.createBlockData()
@@ -35,7 +36,7 @@ class TreeGen(
     private val aLeaves = Material.AZALEA_LEAVES.createBlockData()
     private val dLeaves = Material.DARK_OAK_LEAVES.createBlockData()
     private val oak = Material.OAK_LOG.createBlockData() as Orientable
-    private val notPlacedBlocks = mutableMapOf<Triple<Int, Int, Int>, BlockData>()
+    private val notPlacedBlocks: MutableMap<Triple<Int, Int, Int>, BlockData> = ConcurrentHashMap()
 
     init {
         oak.axis = Axis.Y
@@ -191,14 +192,18 @@ class TreeGen(
             for (i in 0..direction.length().toInt()) {
                 val step = basePos.clone().add(unitDirection.clone().multiply(i))
 
-                when (i) {
-                    0 -> handleBlockSphere((thickness).toInt(), basePos, limitedRegion, oak, notPlacedBlocks)
-                    else -> {
-                        handleCylinder(limitedRegion, unitDirection, step, thickness)
-                        /*if (limitedRegion.getBlockData(x, y, z) == air) {
-                            limitedRegion.setBlockData(x, y, z, oak)
-                        }*/
+                if (iterationDepth == 0 ) {
+                    when (i) {
+                        0 -> handleBlockSphere((thickness + 3).toInt(), basePos, limitedRegion, oak, notPlacedBlocks)
+                        else -> {
+                            handleCylinder(limitedRegion, unitDirection, step, thickness)
+                            /*if (limitedRegion.getBlockData(x, y, z) == air) {
+                                limitedRegion.setBlockData(x, y, z, oak)
+                            }*/
+                        }
                     }
+                } else {
+                    handleCylinder(limitedRegion, unitDirection, step, thickness)
                 }
             }
 
@@ -216,23 +221,30 @@ class TreeGen(
         val axis1 = unitDirection.clone().crossProduct(reference).normalize()
         val axis2 = unitDirection.clone().crossProduct(axis1).normalize()
 
-        for (angle in 0 until 360 step 30) {
-            val radians = Math.toRadians(angle.toDouble())
-            val offset = axis1.clone().multiply(cos(radians) * thickness)
-                .add(axis2.clone().multiply(sin(radians) * thickness))
+        val radialStep = 0.5
+        val angleStep = 15
 
-            val point = step.clone().add(offset)
-            val blockX = point.blockX
-            val blockY = point.blockY
-            val blockZ = point.blockZ
+        var r = 0.0
+        while (r <= thickness) {
+            for (angle in 0 until 360 step angleStep) {
+                val radians = Math.toRadians(angle.toDouble())
+                val offset = axis1.clone().multiply(cos(radians) * r)
+                    .add(axis2.clone().multiply(sin(radians) * r))
 
-            if (limitedRegion.getBlockData(blockX, blockY, blockZ) == air) {
+                val point = step.clone().add(offset)
+                val blockX = point.blockX
+                val blockY = point.blockY
+                val blockZ = point.blockZ
+
                 if (!limitedRegion.isInRegion(blockX, blockY, blockZ)) {
                     notPlacedBlocks.put(Triple(blockX, blockY, blockZ), oak)
                 } else {
-                    limitedRegion.setBlockData(blockX, blockY, blockZ, oak)
+                    if (limitedRegion.getBlockData(blockX, blockY, blockZ) == air) {
+                        limitedRegion.setBlockData(blockX, blockY, blockZ, oak)
+                    }
                 }
             }
+            r += radialStep
         }
     }
 
@@ -256,7 +268,9 @@ class TreeGen(
                 if (!limitedRegion.isInRegion(x, y, z)) {
                     notPlacedBlocks.put(Triple(x, y, z), leaf)
                 } else {
-                    limitedRegion.setBlockData(x, y, z, leaf)
+                    if (limitedRegion.getBlockData(x, y, z) == air) {
+                        limitedRegion.setBlockData(x, y, z, leaf)
+                    }
                 }
             }
         }
