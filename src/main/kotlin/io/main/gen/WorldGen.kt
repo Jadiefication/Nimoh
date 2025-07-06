@@ -2,6 +2,7 @@ package io.main.gen
 
 import io.main.gen.bush.BushGen
 import io.main.gen.tree.TreeGen
+import io.main.gen.tree.palm.PalmGen
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.generator.BlockPopulator
@@ -197,6 +198,6 @@ class WorldGen: ChunkGenerator() {
     override fun getDefaultPopulators(
         world: World
     ): List<BlockPopulator?> {
-        return listOf(TreeGen(this), BushGen(this), GrassGen(this))
+        return listOf(TreeGen(this), BushGen(this), GrassGen(this), PalmGen(this))
     }
 }
