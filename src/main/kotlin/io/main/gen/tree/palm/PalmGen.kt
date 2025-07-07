@@ -83,14 +83,14 @@ class PalmGen(
         val cellZ = floor((worldZ.toDouble() / worldGen.cellSize)).toLong()
 
         if (worldGen.islandInCell.contains(cellX to cellZ)) {
-            if (random.nextInt(5000) == 1) {
+            if (random.nextInt(100) == 1) {
                 val worldY = handleGettingFreeBlock(worldInfo, worldX, worldZ, limitedRegion)
                 if (worldY == -0x8) return
                 generateFractalTree(Vector(worldX, worldY, worldZ), Vector(
                     3 + (random.nextDouble() - 0.5) * 0.1, // Small random X offset
                     7.0,                               // Main Y direction
                     1 +(random.nextDouble() - 0.5) * 0.1   // Small random Z offset
-                ), limitedRegion, random)
+                ), limitedRegion)
             }
         } else {
             return
@@ -122,26 +122,34 @@ class PalmGen(
     ) {
         val top = basePos.clone().add(direction)
         val twoPi = (2 * Math.PI).toLong()
+        val stepSize = Math.PI / 8
 
-        for (i in 0L.. twoPi step (Math.PI / 8).toLong()) {
-            val x = cos(i.toDouble()).toInt()
-            val z = sin(i.toDouble()).toInt()
-            val y = -5 * cosh(x.toDouble()/-5).toInt()
+        var i = 0.0
+        while (i <= twoPi) {
+            val leafLength = 5
+            val upwardBend = -i * 0.2  // Gives slight upward curve to leaf
+            val pos = top.clone().add(Vector(cos(i), upwardBend, sin(i)).multiply(leafLength))
+            val unitPos = pos.clone().normalize()
 
-            val pos = top.clone().add(Vector(x, y, z))
+            for (j in 0..pos.length().toInt()) {
+                val step = top.clone().add(unitPos.clone().multiply(j))
 
-            val newX = pos.x.toInt()
-            val newY = pos.y.toInt()
-            val newZ = pos.z.toInt()
+                val newX = step.x.toInt()
+                val newY = step.y.toInt()
+                val newZ = step.z.toInt()
 
-            if (limitedRegion.isInRegion(newX, newY, newZ)) {
-                if (limitedRegion.getBlockData(newX, newY, newZ) == air) {
-                    limitedRegion.setBlockData(newX, newY, newZ, jungle)
+                if (limitedRegion.isInRegion(newX, newY, newZ)) {
+                    if (limitedRegion.getBlockData(newX, newY, newZ) == air) {
+                        limitedRegion.setBlockData(newX, newY, newZ, jLeaves)
+                    }
+                } else {
+                    notPlacedBlocks.put(Triple(newX, newY, newZ), jLeaves)
                 }
-            } else {
-                notPlacedBlocks.put(Triple(newX, newY, newZ), jungle)
             }
+
+            i += stepSize
         }
+
 
 
     }
@@ -149,27 +157,34 @@ class PalmGen(
     private fun generateFractalTree(
         basePos: Vector,
         direction: Vector,
-        limitedRegion: LimitedRegion,
-        random: Random
+        limitedRegion: LimitedRegion
     ) {
         val unitDirection = direction.clone().normalize()
 
         for (i in 0..direction.length().toInt()) {
             val step = basePos.clone().add(unitDirection.clone().multiply(i))
 
-            val y = step.y
-            val x = 5 * sin(step.x * y).toInt()
-            val z = 5 * sin(step.z * y).toInt()
+            val offset = Vector(
+                sin(i * 0.2) * 0.5,
+                0.0,
+                sin(i * 0.15) * 0.5
+            )
+            val pos = step.clone().add(offset)
+
+
+            val y = pos.y.toInt()
+            val x = pos.x.toInt()
+            val z = pos.z.toInt()
 
             when (i) {
                 0 -> handleBlockSphere(1, basePos, limitedRegion, jungle, notPlacedBlocks)
                 else -> {
-                    if (limitedRegion.isInRegion(x, y.toInt(), z)) {
-                        if (limitedRegion.getBlockData(x, y.toInt(), z) == air) {
-                            limitedRegion.setBlockData(x, y.toInt(), z, jungle)
+                    if (limitedRegion.isInRegion(x, y, z)) {
+                        if (limitedRegion.getBlockData(x, y, z) == air) {
+                            limitedRegion.setBlockData(x, y, z, jungle)
                         }
                     } else {
-                        notPlacedBlocks.put(Triple(x, y.toInt(), z), jungle)
+                        notPlacedBlocks.put(Triple(x, y, z), jungle)
                     }
                 }
             }
