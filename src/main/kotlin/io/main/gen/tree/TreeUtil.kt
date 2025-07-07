@@ -8,6 +8,7 @@ import io.main.gen.tree.precompute.TreeBlock
 import org.bukkit.Material
 import org.bukkit.block.data.BlockData
 import org.bukkit.block.data.Orientable
+import org.bukkit.generator.LimitedRegion
 import org.bukkit.util.Vector
 import java.util.*
 import kotlin.math.*
@@ -30,8 +31,6 @@ fun generateFractalTreePrecomputed(
     direction: Vector,
     random: Random
 ) {
-    val blocks = mutableListOf<TreeBlock>()
-    val affectedChunks = mutableSetOf<Pair<Int, Int>>()
     val blocksPerChunk = mutableMapOf<Pair<Int, Int>, MutableList<TreeBlock>>()
 
     fun addBlock(
@@ -140,4 +139,17 @@ fun generateFractalTreePrecomputed(
     )
     GlobalTreeMap.registerTree(precomputed)
 
+}
+
+fun handleBlockSphere(
+    radius: Int,
+    pos: Vector,
+    limitedRegion: LimitedRegion,
+    blockData: BlockData
+) {
+    handleSphereChecking(radius, pos) { x, y, z ->
+        if (limitedRegion.getBlockData(x, y, z) == air) {
+            limitedRegion.setBlockData(x, y, z, blockData)
+        }
+    }
 }

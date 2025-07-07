@@ -25,7 +25,6 @@ class BushGen(
     private val dLeaves = Material.DARK_OAK_LEAVES.createBlockData()
     private var declared = false
     private lateinit var newRandom: Random
-    private val notPlacedBlocks = mutableMapOf<Triple<Int, Int, Int>, BlockData>()
 
     override fun populate(
         worldInfo: WorldInfo,
@@ -101,7 +100,7 @@ class BushGen(
                     2 -> aLeaves
                     else -> dLeaves
                 }
-                handleBlockSphere(3, Vector(x, y, z), limitedRegion, leaf, notPlacedBlocks)
+                handleBlockSphere(3, Vector(x, y, z), limitedRegion, leaf)
             }
         }
     }

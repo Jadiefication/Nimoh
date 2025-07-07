@@ -3,6 +3,7 @@ package io.main.gen.tree.palm
 import io.main.gen.WorldGen
 import io.main.gen.tree.air
 import io.main.gen.tree.handleBlockSphere
+import io.main.gen.tree.precompute.PrecomputedTree
 import org.bukkit.Axis
 import org.bukkit.Location
 import org.bukkit.Material
@@ -23,12 +24,8 @@ class PalmGen(
     val worldGen: WorldGen
 ): BlockPopulator() {
 
-    private val maxDepth = 5
-    private val scale = 0.8562
-    private val epsilon = 1e-6
     private val jLeaves = Material.JUNGLE_LEAVES.createBlockData()
     private val jungle = Material.JUNGLE_WOOD.createBlockData() as Orientable
-    private val notPlacedBlocks: MutableMap<Triple<Int, Int, Int>, BlockData> = ConcurrentHashMap()
 
     init {
         jungle.axis = Axis.Y
@@ -41,29 +38,10 @@ class PalmGen(
         chunkZ: Int,
         limitedRegion: LimitedRegion
     ) {
-        if (notPlacedBlocks.isNotEmpty()) {
-            notPlacedBlocks.forEach { (x, y, z), blockData ->
-                attemptPlacement(x, y, z, limitedRegion, blockData)
-            }
-        }
-
         for (x in 0..16) {
             for (z in 0..16) {
                 handleChance(x, z, random, limitedRegion, worldInfo, chunkX, chunkZ)
             }
-        }
-    }
-
-    private fun attemptPlacement(
-        x: Int,
-        y: Int,
-        z: Int,
-        limitedRegion: LimitedRegion,
-        blockData: BlockData
-    ) {
-        if (limitedRegion.isInRegion(x, y, z)) {
-            limitedRegion.setBlockData(x, y, z, blockData)
-            notPlacedBlocks.remove(Triple(x, y, z))
         }
     }
 
@@ -138,12 +116,8 @@ class PalmGen(
                 val newY = step.y.toInt()
                 val newZ = step.z.toInt()
 
-                if (limitedRegion.isInRegion(newX, newY, newZ)) {
-                    if (limitedRegion.getBlockData(newX, newY, newZ) == air) {
-                        limitedRegion.setBlockData(newX, newY, newZ, jLeaves)
-                    }
-                } else {
-                    notPlacedBlocks.put(Triple(newX, newY, newZ), jLeaves)
+                if (limitedRegion.getBlockData(newX, newY, newZ) == air) {
+                    limitedRegion.setBlockData(newX, newY, newZ, jLeaves)
                 }
             }
 
@@ -177,14 +151,10 @@ class PalmGen(
             val z = pos.z.toInt()
 
             when (i) {
-                0 -> handleBlockSphere(1, basePos, limitedRegion, jungle, notPlacedBlocks)
+                0 -> handleBlockSphere(1, basePos, limitedRegion, jungle)
                 else -> {
-                    if (limitedRegion.isInRegion(x, y, z)) {
-                        if (limitedRegion.getBlockData(x, y, z) == air) {
-                            limitedRegion.setBlockData(x, y, z, jungle)
-                        }
-                    } else {
-                        notPlacedBlocks.put(Triple(x, y, z), jungle)
+                    if (limitedRegion.getBlockData(x, y, z) == air) {
+                        limitedRegion.setBlockData(x, y, z, jungle)
                     }
                 }
             }
