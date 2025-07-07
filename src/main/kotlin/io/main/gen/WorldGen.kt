@@ -2,12 +2,15 @@ package io.main.gen
 
 import io.main.gen.bush.BushGen
 import io.main.gen.tree.TreeGen
+import io.main.gen.tree.generateFractalTreePrecomputed
 import io.main.gen.tree.palm.PalmGen
+import io.main.gen.tree.precompute.PrecomputedTree
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
+import org.bukkit.util.Vector
 import org.spongepowered.noise.module.source.Perlin
 import org.spongepowered.noise.module.source.Simplex
 import java.util.*
@@ -63,9 +66,9 @@ class WorldGen: ChunkGenerator() {
                     val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
                     val height = sHeight * 0.7 + pHeight * 0.3
                     val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ, center)).toInt()
-                    setBlocks(finalHeight, chunk, x, z)
+                    setBlocks(finalHeight, chunk, x, z, random)
                 } else {
-                    setBlocks(baseSea, chunk, x, z)
+                    setBlocks(baseSea, chunk, x, z, random)
                 }
             }
         }
@@ -116,7 +119,8 @@ class WorldGen: ChunkGenerator() {
         height: Int,
         chunk: ChunkData,
         x: Int,
-        z: Int
+        z: Int,
+        random: Random
     ) {
         for (y in 0..height) {
             if (y == 0) {
@@ -128,7 +132,7 @@ class WorldGen: ChunkGenerator() {
             } else if (y < height) {
                 chunk.setBlock(x, y, z, Material.DIRT) // Top layers dirt
             } else { // y == height
-                handleShore(y, chunk, x, z)
+                handleShore(y, chunk, x, z, random)
             }
         }
 
@@ -142,11 +146,32 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
+    private fun decideTree(
+        x: Int,
+        y: Int,
+        z: Int,
+        random: Random
+    ) {
+        if (random.nextInt(5000) == 1) {
+            val direction = Vector(
+                3 + (random.nextDouble() - 0.5) * 0.1, // Small random X offset
+                20.0,                               // Main Y direction
+                1 + (random.nextDouble() - 0.5) * 0.1   // Small random Z offset
+            )
+            generateFractalTreePrecomputed(
+                Vector(x, y, z),
+                direction,
+                random
+            )
+        }
+    }
+
     private fun handleShore(
         y: Int,
         chunk: ChunkData,
         x: Int,
-        z: Int
+        z: Int,
+        random: Random
     ) {
         if (63 <= y && y <= 65) {
             chance(chunk, x, y, z)
@@ -154,15 +179,16 @@ class WorldGen: ChunkGenerator() {
         } else {
             when (y) {
                 66 -> {
-                    chance(chunk, x, y, z, 3)
+                    chance(chunk, x, y, z, 3, random)
                 }
                 67 -> {
-                    chance(chunk, x, y, z, 4)
+                    chance(chunk, x, y, z, 4, random)
                 }
                 68 -> {
-                    chance(chunk, x, y, z, 5)
+                    chance(chunk, x, y, z, 5, random)
                 }
                 else -> {
+                    decideTree(x, y, z, random)
                     chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
                 }
             }
@@ -186,11 +212,13 @@ class WorldGen: ChunkGenerator() {
         x: Int,
         y: Int,
         z: Int,
-        probability: Int
+        probability: Int,
+        random: Random
     ) {
-        if (Random().nextInt() % probability == 0) {
+        if (random.nextInt() % probability == 0) {
             chance(chunk, x, y, z)
         } else {
+            decideTree(x, y, z, random)
             chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
         }
     }
@@ -198,6 +226,6 @@ class WorldGen: ChunkGenerator() {
     override fun getDefaultPopulators(
         world: World
     ): List<BlockPopulator?> {
-        return listOf(TreeGen(this), BushGen(this), GrassGen(this), PalmGen(this))
+        return listOf(TreeGen(), BushGen(this), GrassGen(this), PalmGen(this))
     }
 }
