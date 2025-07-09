@@ -3,11 +3,17 @@ package io.main.nimoh
 import io.main.command.CellCommand
 import io.main.gen.WorldGen
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.bukkit.Bukkit
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.java.JavaPlugin
 
 class Nimoh : JavaPlugin() {
+
+    companion object {
+        val scope = CoroutineScope(Dispatchers.Default)
+    }
 
     private val values = listOf("baseSea", "terrainAmplitude",
         "sScale", "pScale", "landRadius", "falloffRadius", "cellSize")

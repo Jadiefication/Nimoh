@@ -5,7 +5,7 @@ import io.main.gen.math.handleSphereChecking
 import io.main.gen.math.rotateVectorDebug
 import io.main.gen.tree.precompute.PrecomputedTree
 import io.main.gen.tree.precompute.TreeBlock
-import kotlinx.coroutines.CoroutineScope
+import io.main.nimoh.Nimoh.Companion.scope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,8 +33,6 @@ private val oak = (Material.OAK_LOG.createBlockData() as Orientable).apply { axi
 private val angles = (0 until 360 step 15).map { Math.toRadians(it.toDouble()) }
 private val cosCache = angles.map { cos(it) }
 private val sinCache = angles.map { sin(it) }
-
-private val scope = CoroutineScope(Dispatchers.Default)
 
 fun generateFractalTreePrecomputed(
     basePos: Vector,
@@ -157,7 +155,7 @@ fun generateFractalTreePrecomputed(
         )
 
         withContext(Dispatchers.Main) {
-            GlobalTreeMap.registerTree(precomputed)
+            GlobalPOIMap.register(precomputed)
         }
     }
 
