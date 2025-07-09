@@ -4,6 +4,7 @@ import io.main.gen.bush.BushGen
 import io.main.gen.tree.TreeGen
 import io.main.gen.tree.generateFractalTreePrecomputed
 import io.main.gen.tree.palm.PalmGen
+import io.main.gen.tree.palm.precomputePalm
 import io.main.gen.tree.precompute.PrecomputedTree
 import org.bukkit.Material
 import org.bukkit.World
@@ -166,6 +167,25 @@ class WorldGen: ChunkGenerator() {
         }
     }
 
+    private fun decidePalm(
+        x: Int,
+        y: Int,
+        z: Int,
+        random: Random
+    ) {
+        if (random.nextInt(1000) == 1) {
+            val direction = Vector(
+                3 + (random.nextDouble() - 0.5) * 0.1, // Small random X offset
+                7.0,                               // Main Y direction
+                1 +(random.nextDouble() - 0.5) * 0.1   // Small random Z offset
+            )
+            precomputePalm(
+                Vector(x, y, z),
+                direction
+            )
+        }
+    }
+
     private fun handleShore(
         y: Int,
         chunk: ChunkData,
@@ -174,7 +194,7 @@ class WorldGen: ChunkGenerator() {
         random: Random
     ) {
         if (63 <= y && y <= 65) {
-            chance(chunk, x, y, z)
+            chance(chunk, x, y, z, random)
 
         } else {
             when (y) {
@@ -199,12 +219,15 @@ class WorldGen: ChunkGenerator() {
         chunk: ChunkData,
         x: Int,
         y: Int,
-        z: Int
+        z: Int,
+        random: Random
     ) {
-        if (Random().nextInt() % 2 == 0) {
+        if (random.nextInt() % 2 == 0) {
             chunk.setBlock(x, y, z, Material.SAND)
+            decidePalm(x, y, z, random)
         } else {
             chunk.setBlock(x, y, z, Material.GRAVEL)
+            decidePalm(x, y, z, random)
         }
     }
     private fun chance(
@@ -216,7 +239,7 @@ class WorldGen: ChunkGenerator() {
         random: Random
     ) {
         if (random.nextInt() % probability == 0) {
-            chance(chunk, x, y, z)
+            chance(chunk, x, y, z, random)
         } else {
             decideTree(x, y, z, random)
             chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
@@ -226,6 +249,6 @@ class WorldGen: ChunkGenerator() {
     override fun getDefaultPopulators(
         world: World
     ): List<BlockPopulator?> {
-        return listOf(TreeGen(), BushGen(this), GrassGen(this), PalmGen(this))
+        return listOf(TreeGen(), BushGen(this), GrassGen(this), PalmGen())
     }
 }
