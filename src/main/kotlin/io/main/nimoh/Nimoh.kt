@@ -13,6 +13,8 @@ class Nimoh : JavaPlugin() {
 
     companion object {
         val scope = CoroutineScope(Dispatchers.Default)
+        lateinit var plugin: Nimoh
+            private set
     }
 
     private val values = listOf("baseSea", "terrainAmplitude",
@@ -20,6 +22,7 @@ class Nimoh : JavaPlugin() {
     private val worldGen = WorldGen()
 
     override fun onEnable() {
+        plugin = this
         saveResource("config.yml", false)
         saveDefaultConfig()
         values.forEachIndexed { index, value ->

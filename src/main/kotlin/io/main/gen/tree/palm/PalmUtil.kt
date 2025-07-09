@@ -4,11 +4,13 @@ import io.main.gen.math.handleSphereChecking
 import io.main.gen.tree.GlobalPOIMap
 import io.main.gen.tree.precompute.PrecomputedTree
 import io.main.gen.tree.precompute.TreeBlock
+import io.main.nimoh.Nimoh.Companion.plugin
 import io.main.nimoh.Nimoh.Companion.scope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.bukkit.Axis
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.block.data.BlockData
 import org.bukkit.block.data.Orientable
@@ -111,7 +113,7 @@ fun precomputePalm(
             affectedChunks = blocksPerChunk.keys.toSet()
         )
 
-        withContext(Dispatchers.Main) {
+        Bukkit.getScheduler().runTask(plugin) { task ->
             GlobalPOIMap.register(precomputed)
         }
     }
