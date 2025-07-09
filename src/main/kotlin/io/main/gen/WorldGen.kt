@@ -61,18 +61,43 @@ class WorldGen: ChunkGenerator() {
                 val center = islandInCell[(cellX to cellZ)]
 
                 if (center != null) {
-                    val simplexNoise = sNoise.get(worldX * sScale, 0.0, worldZ * sScale)
-                    val perlinNoise = pNoise.get(worldX * pScale, 0.0, worldZ * pScale)
-                    val sHeight = (baseSea + ((simplexNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                    val pHeight = (baseSea + ((perlinNoise + 1.0) / 2) * terrainAmplitude).toInt()
-                    val height = sHeight * 0.7 + pHeight * 0.3
-                    val finalHeight = baseSea + ((height - baseSea) * handleFalloff(worldX, worldZ, center)).toInt()
-                    setBlocks(finalHeight, chunk, x, z, random)
+                    smoothTerrain(worldX, worldZ, center, chunk, random, x, z)
                 } else {
                     setBlocks(baseSea, chunk, x, z, random)
                 }
             }
         }
+    }
+
+    private fun smoothTerrain(
+        x: Int,
+        z: Int,
+        center: Pair<Long, Long>,
+        chunk: ChunkData,
+        random: Random,
+        chunkX: Int,
+        chunkZ: Int
+    ) {
+
+        val sAverage = (
+                sNoise.get((x - 1) * sScale, 0.0, z * sScale).normalize() +
+                        sNoise.get((x + 1) * sScale, 0.0, z * sScale).normalize() +
+                        sNoise.get(x * sScale, 0.0, (z - 1) * sScale).normalize() +
+                        sNoise.get(x * sScale, 0.0, (z + 1) * sScale).normalize() +
+                        sNoise.get(x * sScale, 0.0, z * sScale).normalize()
+                ) / 5.0
+        val pAverage = (
+                pNoise.get((x - 1) * pScale, 0.0, z * pScale).normalize() +
+                        pNoise.get((x + 1) * pScale, 0.0, z * pScale).normalize() +
+                        pNoise.get(x * pScale, 0.0, (z - 1) * pScale).normalize() +
+                        pNoise.get(x * pScale, 0.0, (z + 1) * pScale).normalize() +
+                        pNoise.get(x * pScale, 0.0, z * pScale).normalize()
+                ) / 5.0
+        val sNormal = baseSea + sAverage.normalize() * terrainAmplitude
+        val pNormal = baseSea + pAverage.normalize() * terrainAmplitude
+        val average = sNormal * 0.7 + pNormal * 0.3
+        val finalHeight = baseSea + ((average - baseSea) * handleFalloff(x, z, center)).toInt()
+        setBlocks(finalHeight, chunk, chunkX, chunkZ, random)
     }
 
     private fun handleIslandCenter(
@@ -126,7 +151,7 @@ class WorldGen: ChunkGenerator() {
         for (y in 0..height) {
             if (y == 0) {
                 chunk.setBlock(x, y, z, Material.BEDROCK)
-            } else if (y < baseSea- 2 && y <= height - 5) { // Deeper stone for lower parts
+            } else if (y < baseSea - 2 && y <= height - 5) { // Deeper stone for lower parts
                 chunk.setBlock(x, y, z, Material.STONE)
             } else if (y < height - 2) {
                 chunk.setBlock(x, y, z, Material.STONE) // Fill lower layers with stone
@@ -250,4 +275,8 @@ class WorldGen: ChunkGenerator() {
     ): List<BlockPopulator?> {
         return listOf(TreeGen(), BushGen(this), GrassGen(this), PalmGen())
     }
+}
+
+fun Double.normalize(): Double {
+    return (this + 1.0) / 2
 }

@@ -20,8 +20,10 @@ class Nimoh : JavaPlugin() {
         val localRandom = Random(UUID.randomUUID().mostSignificantBits)
     }
 
-    private val values = listOf("baseSea", "terrainAmplitude",
-        "sScale", "pScale", "landRadius", "falloffRadius", "cellSize")
+    private val values = listOf(
+        "baseSea", "terrainAmplitude",
+        "sScale", "pScale", "landRadius", "falloffRadius", "cellSize"
+    )
     private val worldGen = WorldGen()
 
     override fun onEnable() {
