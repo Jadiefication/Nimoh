@@ -1,6 +1,7 @@
 package io.main.gen
 
 import io.main.gen.bush.BushGen
+import io.main.gen.path.PathGen
 import io.main.gen.tree.TreeGen
 import io.main.gen.tree.generateFractalTreePrecomputed
 import io.main.gen.tree.palm.PalmGen
@@ -273,7 +274,7 @@ class WorldGen: ChunkGenerator() {
     override fun getDefaultPopulators(
         world: World
     ): List<BlockPopulator?> {
-        return listOf(TreeGen(), BushGen(this), GrassGen(this), PalmGen())
+        return listOf(TreeGen(), BushGen(this), GrassGen(this), PalmGen(), PathGen(this))
     }
 }
 
