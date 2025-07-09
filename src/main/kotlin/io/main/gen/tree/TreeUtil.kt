@@ -5,6 +5,7 @@ import io.main.gen.math.handleSphereChecking
 import io.main.gen.math.rotateVectorDebug
 import io.main.gen.tree.precompute.PrecomputedTree
 import io.main.gen.tree.precompute.TreeBlock
+import io.main.nimoh.Nimoh.Companion.localRandom
 import io.main.nimoh.Nimoh.Companion.plugin
 import io.main.nimoh.Nimoh.Companion.scope
 import kotlinx.coroutines.Dispatchers
@@ -38,8 +39,7 @@ private val sinCache = angles.map { sin(it) }
 
 fun generateFractalTreePrecomputed(
     basePos: Vector,
-    direction: Vector,
-    random: Random
+    direction: Vector
 ) {
     scope.launch {
         val blocksPerChunk = mutableMapOf<Pair<Int, Int>, MutableList<TreeBlock>>()
@@ -77,7 +77,7 @@ fun generateFractalTreePrecomputed(
                 for (i in direction.length().toInt() - 3 until direction.length().toInt()) {
                     val pos = basePos.clone().add(unitDirection.clone().multiply(i))
                     handleSphereChecking(leafRadius, pos) { x, y, z ->
-                        val leaf = when (random.nextInt(4)) {
+                        val leaf = when (localRandom.nextInt(4)) {
                             0 -> sLeaves
                             1 -> oLeaves
                             2 -> aLeaves
@@ -113,8 +113,8 @@ fun generateFractalTreePrecomputed(
             val referenceVector =
                 if (abs(unitDirection.dot(Vector(0, 1, 0))) > 1.0 - epsilon) Vector(1, 0, 0) else Vector(0, 1, 0)
 
-            val azimuthA = random.nextDouble() * 2 * PI
-            val azimuthB = azimuthA + PI + (random.nextDouble() - 0.5) * PI / 2
+            val azimuthA = localRandom.nextDouble() * 2 * PI
+            val azimuthB = azimuthA + PI + (localRandom.nextDouble() - 0.5) * PI / 2
             val rotatedDirectionA = rotateAroundY(unitDirection.clone(), azimuthA)
             val rotatedDirectionB = rotateAroundY(unitDirection.clone(), azimuthB)
 
@@ -123,8 +123,8 @@ fun generateFractalTreePrecomputed(
                 axis1 = unitDirection.clone().crossProduct(Vector(0, 0, 1)).normalize()
             }
             val axis2 = rotatedDirectionB.clone().crossProduct(axis1).normalize()
-            val branchAngleA = Math.toRadians(30 + random.nextDouble() * 40)
-            val branchAngleB = Math.toRadians(20 + random.nextDouble() * 60)
+            val branchAngleA = Math.toRadians(30 + localRandom.nextDouble() * 40)
+            val branchAngleB = Math.toRadians(20 + localRandom.nextDouble() * 60)
 
             val newDirectionA = rotateVectorDebug(
                 rotateVectorDebug(unitDirection.clone(), axis1, branchAngleA),
@@ -138,8 +138,8 @@ fun generateFractalTreePrecomputed(
             ).multiply(newLength)
 
             val upwardDirection = unitDirection.clone()
-                .multiply(newLength * (0.8 + random.nextDouble() * 0.2))
-                .add(Vector(0.0, 1.0, 0.0).multiply(0.4 + random.nextDouble() * 0.2))
+                .multiply(newLength * (0.8 + localRandom.nextDouble() * 0.2))
+                .add(Vector(0.0, 1.0, 0.0).multiply(0.4 + localRandom.nextDouble() * 0.2))
 
             val newThickness = thickness * (1 - iterationDepth / maxDepth.toDouble()).pow(1.5)
 

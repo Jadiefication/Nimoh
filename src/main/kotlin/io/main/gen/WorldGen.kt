@@ -161,8 +161,7 @@ class WorldGen: ChunkGenerator() {
             )
             generateFractalTreePrecomputed(
                 Vector(x, y, z),
-                direction,
-                random
+                direction
             )
         }
     }

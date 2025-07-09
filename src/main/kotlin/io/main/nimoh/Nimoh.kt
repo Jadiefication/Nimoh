@@ -8,6 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import org.bukkit.Bukkit
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.java.JavaPlugin
+import java.util.UUID
+import kotlin.random.Random
 
 class Nimoh : JavaPlugin() {
 
@@ -15,6 +17,7 @@ class Nimoh : JavaPlugin() {
         val scope = CoroutineScope(Dispatchers.Default)
         lateinit var plugin: Nimoh
             private set
+        val localRandom = Random(UUID.randomUUID().mostSignificantBits)
     }
 
     private val values = listOf("baseSea", "terrainAmplitude",
