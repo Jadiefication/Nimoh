@@ -1,21 +1,19 @@
 package io.main.gen.path
 
 import io.main.gen.WorldGen
-import io.main.world.handleGettingFreeBlock
 import org.bukkit.Material
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.LimitedRegion
 import org.bukkit.generator.WorldInfo
 import org.bukkit.util.Vector
 import org.spongepowered.noise.module.source.Simplex
-import java.util.Random
-import java.util.UUID
+import java.util.*
 import kotlin.math.floor
 import kotlin.math.sin
 
 class PathGen(
     val worldGen: WorldGen
-): BlockPopulator() {
+) : BlockPopulator() {
 
     private val simplex = Simplex()
     private val pScale = 0.5
@@ -89,14 +87,14 @@ class PathGen(
         limitedRegion: LimitedRegion
     ): Pair<Boolean, List<Vector>> {
         val offsets = listOf(
-            -1 to  0, // West
+            -1 to 0, // West
             0 to -1, // North
             -1 to -1, // Northwest
-            1 to  0, // East
-            0 to  1, // South
-            1 to  1, // Southeast
+            1 to 0, // East
+            0 to 1, // South
+            1 to 1, // Southeast
             1 to -1, // Northeast
-            -1 to  1,  // Southwest
+            -1 to 1,  // Southwest
             0 to 0 // Center
         )
 

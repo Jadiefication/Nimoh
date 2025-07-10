@@ -5,13 +5,12 @@ import org.bukkit.Material
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.LimitedRegion
 import org.bukkit.generator.WorldInfo
-import org.bukkit.util.Vector
-import java.util.Random
+import java.util.*
 import kotlin.math.floor
 
 class GrassGen(
     val worldGen: WorldGen
-): BlockPopulator() {
+) : BlockPopulator() {
 
     private val longGrass = Material.TALL_GRASS.createBlockData()
     private val shortGrass = Material.SHORT_GRASS.createBlockData()

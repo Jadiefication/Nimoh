@@ -1,22 +1,20 @@
 package io.main.gen.bush
 
 import io.main.gen.WorldGen
-import io.main.gen.math.handleSphereChecking
 import io.main.gen.tree.air
 import io.main.gen.tree.handleBlockSphere
 import io.main.world.handleGettingFreeBlock
 import org.bukkit.Material
-import org.bukkit.block.data.BlockData
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.LimitedRegion
 import org.bukkit.generator.WorldInfo
 import org.bukkit.util.Vector
-import java.util.Random
+import java.util.*
 import kotlin.math.floor
 
 class BushGen(
     val worldGen: WorldGen
-): BlockPopulator() {
+) : BlockPopulator() {
 
     private val fence = Material.SPRUCE_FENCE.createBlockData()
     private val sLeaves = Material.SPRUCE_LEAVES.createBlockData()
@@ -63,11 +61,13 @@ class BushGen(
             if (random.nextInt(1000) == 1) {
                 val worldY = handleGettingFreeBlock(worldInfo, worldX, worldZ, limitedRegion)
                 if (worldY == -0x8) return
-                generateBush(Vector(worldX, worldY, worldZ), Vector(
-                    3 + (random.nextDouble() - 0.5) * 0.1, // Small random X offset
-                    4.0,                               // Main Y direction
-                    1 +(random.nextDouble() - 0.5) * 0.1   // Small random Z offset
-                ), limitedRegion, random)
+                generateBush(
+                    Vector(worldX, worldY, worldZ), Vector(
+                        3 + (random.nextDouble() - 0.5) * 0.1, // Small random X offset
+                        4.0,                               // Main Y direction
+                        1 + (random.nextDouble() - 0.5) * 0.1   // Small random Z offset
+                    ), limitedRegion, random
+                )
             }
         } else {
             return

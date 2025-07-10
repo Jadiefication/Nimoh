@@ -16,7 +16,8 @@ fun handleGettingFreeBlock(
         val belowBlock = limitedRegion.getBlockData(x, y - 1, z).material
 
         if (currentBlock == Material.AIR &&
-            (belowBlock == Material.GRASS_BLOCK || belowBlock == Material.DIRT)) {
+            (belowBlock == Material.GRASS_BLOCK || belowBlock == Material.DIRT)
+        ) {
             return y
         }
 

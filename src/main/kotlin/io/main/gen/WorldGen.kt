@@ -4,13 +4,11 @@ import io.main.gen.bush.BushGen
 import io.main.gen.path.PathGen
 import io.main.gen.tree.TreeGen
 import io.main.gen.tree.palm.PalmGen
-import io.main.gen.tree.precompute.PrecomputedTree
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
-import org.bukkit.util.Vector
 import org.spongepowered.noise.module.source.Perlin
 import org.spongepowered.noise.module.source.Simplex
 import java.util.*
@@ -19,7 +17,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 
-class WorldGen: ChunkGenerator() {
+class WorldGen : ChunkGenerator() {
 
     var baseSea = 62
     var terrainAmplitude = 40
@@ -186,12 +184,15 @@ class WorldGen: ChunkGenerator() {
                 66 -> {
                     chance(chunk, x, y, z, 3, random)
                 }
+
                 67 -> {
                     chance(chunk, x, y, z, 4, random)
                 }
+
                 68 -> {
                     chance(chunk, x, y, z, 5, random)
                 }
+
                 else -> {
                     chunk.setBlock(x, y, z, Material.GRASS_BLOCK)
                 }
@@ -212,6 +213,7 @@ class WorldGen: ChunkGenerator() {
             chunk.setBlock(x, y, z, Material.GRAVEL)
         }
     }
+
     private fun chance(
         chunk: ChunkData,
         x: Int,

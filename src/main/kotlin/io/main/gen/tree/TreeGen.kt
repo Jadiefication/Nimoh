@@ -4,10 +4,7 @@ import io.main.gen.WorldGen
 import io.main.gen.math.handleNaN
 import io.main.gen.math.handleSphereChecking
 import io.main.gen.math.rotateVectorDebug
-import io.main.gen.tree.precompute.PrecomputedTree
-import io.main.gen.tree.precompute.TreeType
 import io.main.nimoh.Nimoh.Companion.localRandom
-import io.main.performance.PrecomputedPOI
 import io.main.world.handleGettingFreeBlock
 import org.bukkit.Axis
 import org.bukkit.Material
@@ -19,12 +16,7 @@ import org.bukkit.generator.WorldInfo
 import org.bukkit.util.Vector
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.floor
-import kotlin.math.pow
-import kotlin.math.sin
+import kotlin.math.*
 
 private const val maxDepth = 5
 private const val scale = 0.8562
@@ -33,7 +25,7 @@ private const val leafRadius = 8
 
 class TreeGen(
     val worldGen: WorldGen
-): BlockPopulator() {
+) : BlockPopulator() {
 
     private val sLeaves = Material.SPRUCE_LEAVES.createBlockData()
     private val oLeaves = Material.OAK_LEAVES.createBlockData()
@@ -203,8 +195,26 @@ class TreeGen(
 
         val newThickness = thickness * (1 - iterationDepth / maxDepth.toDouble()).pow(1.5)
 
-        generateRecursive(basePos.clone().add(direction), newDirectionA, iterationDepth + 1, newThickness, limitedRegion)
-        generateRecursive(basePos.clone().add(direction), newDirectionB, iterationDepth + 1, newThickness, limitedRegion)
-        generateRecursive(basePos.clone().add(direction), upwardDirection, iterationDepth + 1, newThickness, limitedRegion)
+        generateRecursive(
+            basePos.clone().add(direction),
+            newDirectionA,
+            iterationDepth + 1,
+            newThickness,
+            limitedRegion
+        )
+        generateRecursive(
+            basePos.clone().add(direction),
+            newDirectionB,
+            iterationDepth + 1,
+            newThickness,
+            limitedRegion
+        )
+        generateRecursive(
+            basePos.clone().add(direction),
+            upwardDirection,
+            iterationDepth + 1,
+            newThickness,
+            limitedRegion
+        )
     }
 }

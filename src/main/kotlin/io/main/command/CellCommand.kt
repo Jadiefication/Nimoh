@@ -1,10 +1,7 @@
 package io.main.command
 
 import com.mojang.brigadier.Command
-import com.mojang.brigadier.arguments.DoubleArgumentType
-import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.arguments.LongArgumentType
-import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import io.main.gen.WorldGen
 import io.papermc.paper.command.brigadier.CommandSourceStack
@@ -37,18 +34,19 @@ class CellCommand(
 
         fun command(): LiteralArgumentBuilder<CommandSourceStack> {
             return Commands.literal("tp")
-                .then(Commands.argument("x", LongArgumentType.longArg())
-                    .then(Commands.argument("z", LongArgumentType.longArg()).executes {
-                        val x = LongArgumentType.getLong(it, "x")
-                        val z = LongArgumentType.getLong(it, "z")
-                        val sender = it.source.executor
+                .then(
+                    Commands.argument("x", LongArgumentType.longArg())
+                        .then(Commands.argument("z", LongArgumentType.longArg()).executes {
+                            val x = LongArgumentType.getLong(it, "x")
+                            val z = LongArgumentType.getLong(it, "z")
+                            val sender = it.source.executor
 
-                        if (sender?.isOp == true) {
-                            handleTpToCell(x, z, sender)
-                        }
+                            if (sender?.isOp == true) {
+                                handleTpToCell(x, z, sender)
+                            }
 
-                        return@executes Command.SINGLE_SUCCESS
-                    })
+                            return@executes Command.SINGLE_SUCCESS
+                        })
                 )
         }
 
