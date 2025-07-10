@@ -104,7 +104,7 @@ class PathGen(
 
         return offsets.mapIndexed { index, (dx, dz) ->
             simplex.get((x + dx) * pScale, ys[index].y * pScale, ((z + dz) + sin(x * 0.01) * 10) * pScale)
-        }.all { it < 0.1 } to ys
+        }.all { it <= 0.2 } to ys
     }
 
     private fun handleGettingFreeBlock(

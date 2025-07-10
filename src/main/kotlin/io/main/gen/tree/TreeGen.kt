@@ -53,7 +53,7 @@ class TreeGen(
 
         for (x in 0..16) {
             for (z in 0..16) {
-                decideTree(x, z, random, worldInfo, limitedRegion)
+                decideTree(x, z, random, worldInfo, limitedRegion, chunkX, chunkZ)
             }
         }
     }
@@ -63,10 +63,12 @@ class TreeGen(
         z: Int,
         random: Random,
         worldInfo: WorldInfo,
-        limitedRegion: LimitedRegion
+        limitedRegion: LimitedRegion,
+        chunkX: Int,
+        chunkZ: Int
     ) {
-        val worldX = x * 16 + x
-        val worldZ = z * 16 + z
+        val worldX = chunkX * 16 + x
+        val worldZ = chunkZ * 16 + z
 
         val cellX = floor((worldX.toDouble() / worldGen.cellSize)).toLong()
         val cellZ = floor((worldZ.toDouble() / worldGen.cellSize)).toLong()

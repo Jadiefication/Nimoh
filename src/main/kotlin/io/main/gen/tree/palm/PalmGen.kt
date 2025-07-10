@@ -40,7 +40,7 @@ class PalmGen(
 
         for (x in 0..16) {
             for (z in 0..16) {
-                decidePalm(x, z, random, worldInfo, limitedRegion)
+                decidePalm(x, z, random, worldInfo, limitedRegion, chunkX, chunkZ)
             }
         }
     }
@@ -50,16 +50,18 @@ class PalmGen(
         z: Int,
         random: Random,
         worldInfo: WorldInfo,
-        limitedRegion: LimitedRegion
+        limitedRegion: LimitedRegion,
+        chunkX: Int,
+        chunkZ: Int
     ) {
-        val worldX = x * 16 + x
-        val worldZ = z * 16 + z
+        val worldX = chunkX * 16 + x
+        val worldZ = chunkZ * 16 + z
 
         val cellX = floor((worldX.toDouble() / worldGen.cellSize)).toLong()
         val cellZ = floor((worldZ.toDouble() / worldGen.cellSize)).toLong()
 
         if (worldGen.islandInCell.contains(cellX to cellZ)) {
-            if (random.nextInt(5000) == 1) {
+            if (random.nextInt(500) == 1) {
                 val worldY = handleGettingFreeBlock(worldInfo, worldX, worldZ, limitedRegion)
                 if (worldY == -0x8) return
                 generateRecursive(
